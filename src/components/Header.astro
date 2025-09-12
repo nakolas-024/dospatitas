@@ -1,0 +1,57 @@
+---
+import Icon from './Icon.astro';
+---
+<header>
+  <div class="container">
+    <a href="/" class="logo">
+      <img src="/images/dospatitas-logo.png" alt="Dos Patitas Logo">
+    </a>
+    <nav>
+      <a href="/catalogo" class="nav-link">Catálogo</a>
+      <a href="#" class="nav-link" data-open-modal="how-to-buy-modal">Cómo Comprar</a>
+      <a href="/carrito" class="cart-icon">
+        <Icon name="cart" size={28} />
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  header {
+    background-color: var(--color-light-bg);
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  .logo img {
+    max-height: 50px;
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .nav-link {
+    text-decoration: none;
+    color: var(--color-dark-text);
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 0.9rem;
+  }
+  .nav-link:hover {
+    background-color: #f7f7f7;
+  }
+  .cart-icon {
+    font-size: 1.5rem;
+    text-decoration: none;
+    color: var(--color-dark-text);
+  }
+</style>

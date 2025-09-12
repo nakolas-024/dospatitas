@@ -1,0 +1,96 @@
+---
+// No se necesita nada aquí. ¡Todo es más simple ahora!
+---
+<section class="hero">
+  <div class="hero-content container">
+
+    <div class="text-box">
+      <h1>Tienda Online de Carnet de Control Pediátricos</h1>
+      <p>(ex colorfull.cl)</p>
+      <button data-open-modal="how-to-buy-modal" class="hero-button">
+        Pasos para Comprar
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .hero {
+    background-image: url('/images/hero-banner.png');
+    
+    /* === CAMBIOS CLAVE AQUÍ === */
+    background-size: center;
+    background-repeat: no-repeat; /* 2. Asegura que la imagen no se repita. */
+    background-color: #FDECF2;  /* 3. Color de fondo para rellenar el espacio sobrante. */
+
+    background-position: center;
+    min-height: 450px; 
+    display: flex;
+    align-items: center;
+    padding: 2rem 0;
+  }
+
+  .hero-content {
+    display: flex;
+    justify-content: flex-start; /* Alinea la caja de texto a la izquierda */
+  }
+
+  .text-box {
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    width: 100%;
+    max-width: 480px;
+  }
+
+  h1 { 
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.2; 
+    color: #333; 
+  }
+
+  p { 
+    font-size: 1.1rem; 
+    margin: 0 0 2rem 0; 
+    color: #666;
+  }
+
+  .hero-button {
+    background: #ffafcc;
+    color: #333;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 50px;
+    box-shadow: 0 8px 15px rgba(255, 175, 204, 0.5);
+    transition: all 0.3s ease;
+  }
+  .hero-button:hover { 
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 20px rgba(255, 175, 204, 0.6);
+  }
+
+  /* Hacemos la caja de texto más pequeña en móviles */
+  @media (max-width: 768px) {
+    .hero {
+      min-height: 350px; /* Ajustamos la altura en móviles */
+    }
+    .hero-content {
+      justify-content: center; /* Centramos la caja en pantallas pequeñas */
+      padding: 0 1.5rem;
+    }
+    .text-box {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+  }
+</style>

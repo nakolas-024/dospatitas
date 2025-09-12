@@ -1,0 +1,35 @@
+---
+import Icon from './Icon.astro';
+---
+<footer>
+  <div class="container">
+    <a href="/" class="logo">
+      <img src="/images/dospatitas-logo-blanco.png" alt="Dos Patitas Logo">
+    </a>
+    <a href="https://www.facebook.com/TUPAGINADEFACEBOOK" class="social-icon" target="_blank" rel="noopener noreferrer" aria-label="Visita nuestra página de Facebook">
+      <Icon name="facebook" size={30} />
+    </a>
+  </div>
+</footer>
+
+<style>
+  footer {
+    background-color: var(--color-orange);
+    padding: 1.5rem 0;
+    margin-top: 3rem;
+  }
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  .logo img {
+    max-height: 40px;
+  }
+  .social-icon {
+    color: white;
+  }
+</style>

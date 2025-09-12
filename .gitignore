@@ -1,0 +1,21 @@
+# Archivos de Log y dependencias
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Archivos de compilación de Astro
+dist/
+.astro/
+
+# Variables de entorno (¡Nunca subir contraseñas!)
+.env
+.env.*
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Strapi - Archivos de compilación y temporales
+backend/.cache/
+backend/build/
+backend/database/

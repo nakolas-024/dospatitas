@@ -1,0 +1,34 @@
+---
+// src/components/Categories.astro
+---
+<section class="categories">
+  <h2>Categorias</h2>
+  <div class="category-grid">
+    <a href="#">
+      <img src="https://dospatitas.mollyinc.cl/wp-content/uploads/2025/08/ninos-1024x898.png" alt="Niños">
+    </a>
+    <a href="#">
+      <img src="https://dospatitas.mollyinc.cl/wp-content/uploads/2025/08/NINAS-1024x898.png" alt="Niñas">
+    </a>
+    <a href="#">
+      <img src="https://dospatitas.mollyinc.cl/wp-content/uploads/2025/08/mascotas-1024x898.png" alt="Mascotas">
+    </a>
+  </div>
+</section>
+
+<style>
+  .categories {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  .category-grid img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+</style>

@@ -1,0 +1,98 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import ProductCard from '../components/ProductCard.astro';
+import HowToBuyModal from '../components/HowToBuyModal.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Dos Patitas - Tienda Online">
+  <Header />
+  <main>
+    <Hero />
+
+    <section class="featured-products container">
+      <h2>Destacados de nuestra tienda</h2>
+      <div class="product-grid">
+        <ProductCard 
+          imgSrc="https://dospatitas.mollyinc.cl/wp-content/uploads/2023/08/PW01-300x300.png"
+          title="PW0"
+          price="$0.00"
+        />
+        <ProductCard 
+          imgSrc="https://dospatitas.mollyinc.cl/wp-content/uploads/2023/08/SCO-300x300.png"
+          title="SCO"
+          price="$0.00"
+        />
+        <ProductCard 
+          imgSrc="https://dospatitas.mollyinc.cl/wp-content/uploads/2023/08/SHR01-300x300.png"
+          title="SHR"
+          price="$0.00"
+        />
+        <ProductCard 
+          imgSrc="https://dospatitas.mollyinc.cl/wp-content/uploads/2023/08/SIM01-1-scaled-300x300.png"
+          title="SIM"
+          price="$0.00"
+        />
+      </div>
+    </section>
+
+  </main>
+  
+  <Footer />
+
+  <HowToBuyModal />
+</Layout>
+
+<style>
+  .featured-products {
+    text-align: center;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .featured-products h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+</style>
+
+<script>
+  const openModalButtons = document.querySelectorAll('[data-open-modal]');
+  const closeModalButtons = document.querySelectorAll('[data-close-modal]');
+
+  openModalButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const modalId = button.dataset.openModal;
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('is-open');
+      }
+    });
+  });
+
+  closeModalButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const modal = button.closest('[data-modal]');
+      if (modal) {
+        modal.classList.remove('is-open');
+      }
+    });
+  });
+  
+  document.addEventListener('click', event => {
+    if (event.target.matches('[data-modal]')) {
+      event.target.classList.remove('is-open');
+    }
+  });
+</script>
