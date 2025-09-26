@@ -1,54 +1,75 @@
 ---
 export interface Props {
-  imgSrc: string;
-  title: string;
-  price: string;
+  imgSrc: string;
+  title: string;
+  category: string;
+  price: string;
 }
-const { imgSrc, title, price } = Astro.props;
+const { imgSrc, title, category, price } = Astro.props;
+const product = { name: title, price: price };
 ---
-<div class="product-card">
-  <img src={imgSrc} alt={title} />
-  <div class="product-info">
-    <h3>{title}</h3>
-    <span class="price">{price}</span>
-    <a href="#" class="buy-button">Comprar</a>
-  </div>
+<div class="product-card" data-product={JSON.stringify(product)}>
+  <a href="#" class="image-link">
+    <img src={imgSrc} alt={`Imagen de ${title}`} loading="lazy" />
+  </a>
+  <div class="card-content">
+    <span class="category">{category}</span>
+    <h4>{title}</h4>
+    {price && <p class="price">{price}</p>}
+    <button class="add-to-cart-btn">Agregar al carro</button>
+  </div>
 </div>
-
+<script>
+  // Script de delegación de eventos para agregar al carro
+  if (!document.body.dataset.cardScriptLoaded) {
+    document.body.dataset.cardScriptLoaded = 'true';
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('.add-to-cart-btn');
+      if (!button) return;
+      const card = button.closest('.product-card');
+      const productData = JSON.parse(card.dataset.product);
+      document.dispatchEvent(new CustomEvent('addToCart', { bubbles: true, detail: productData }));
+      button.textContent = '¡Agregado!';
+      button.disabled = true;
+      setTimeout(() => {
+        button.textContent = 'Agregar al carro';
+        button.disabled = false;
+      }, 1500);
+    });
+  }
+</script>
 <style>
-  .product-card {
-    border: 1px solid #e0f7fa;
-    border-radius: 8px;
-    overflow: hidden;
-    text-align: center;
-    background-color: #f8feff;
-  }
-  .product-card img {
-    max-width: 100%;
-    height: auto;
-  }
-  .product-info {
-    padding: 1rem;
-  }
-  h3 {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-  }
-  .price {
-    font-weight: bold;
-    color: #555;
-  }
-  .buy-button {
-    display: inline-block;
-    background-color: var(--color-orange);
-    color: white;
-    font-weight: bold;
-    text-decoration: none;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    margin-top: 1rem;
-    cursor: pointer;
-    width: 80%;
-    border-radius: 5px;
-  }
+/* Estilos completos para la tarjeta de producto */
+.product-card{background-color:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.05);overflow:hidden;display:flex;flex-direction:column;transition:transform .3s ease,box-shadow .3s ease}.product-card:hover{transform:translateY(-5px);box-shadow:0 8px 25px rgba(0,0,0,.1)}.image-link img{width:100%;height:250px;object-fit:cover;display:block}.card-content{padding:1.25rem;display:flex;flex-direction:column;flex-grow:1}
+.category{
+  font-size:.8rem;
+  font-weight:600;
+  color: var(--color-primary); /* Color naranja */
+  text-transform:uppercase;
+  margin-bottom:.5rem
+}
+.card-content h4{font-size:1.1rem;font-weight:700;color:#333;margin:0}.price{font-size:1.2rem;font-weight:700;color:#333;margin:.75rem 0 0}
+.add-to-cart-btn{
+  background-color: var(--color-primary); /* Color naranja */
+  color: white; /* Texto blanco para mejor contraste */
+  border:none;
+  padding:.75rem 1rem;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:auto;
+  width:100%;
+  font-weight:700;
+  transition:all .2s ease
+}
+.add-to-cart-btn:hover{
+  background-color: var(--color-primary-dark); /* Naranja oscuro */
+  transform:scale(1.02)
+}
+.add-to-cart-btn:disabled{
+  background-color: var(--color-secondary); /* Verde */
+  color:#fff;
+  cursor:default;
+  transform:scale(1)
+}
 </style>
+

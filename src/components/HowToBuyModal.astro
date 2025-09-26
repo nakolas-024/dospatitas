@@ -1,68 +1,57 @@
 ---
+// src/components/HowToBuyModal.astro
 ---
-<div id="how-to-buy-modal" class="modal" data-modal>
+<div id="how-to-buy-modal" class="modal-overlay hidden">
   <div class="modal-content">
-    <span class="close-button" data-close-modal>&times;</span>
-    <div class="instructions">
-      <div class="step step-1">
-        <h1>1</h1>
-        <p>Elige tus diseños y agrégalos al carrito</p>
-      </div>
-      <div class="step step-2">
-        <h1>2</h1>
-        <p>Presiona Comprar</p>
-      </div>
-      <div class="step step-3">
-        <h1>3</h1>
-        <p>Serás redireccionado a wsp para coordinar pago y diseño</p>
-      </div>
-    </div>
+    <button class="modal-close-btn" aria-label="Cerrar modal">×</button>
+    <h3>¿Cómo Comprar?</h3>
+    <ol>
+      <li><strong>Explora los diseños:</strong> Navega por nuestro catálogo y elige tus carnets favoritos.</li>
+      <li><strong>Añade a tu pedido:</strong> Usa el botón "Agregar al carro" en cada producto que te guste.</li>
+      <li><strong>Revisa tu pedido:</strong> Haz clic en el botón flotante de WhatsApp para ver tu selección.</li>
+      <li><strong>Envíanos tu pedido:</strong> Presiona "Hacer Pedido" para enviarnos un mensaje de WhatsApp con tu lista.</li>
+      <li><strong>Coordinamos por WhatsApp:</strong> Nos pondremos en contacto contigo para confirmar los datos de personalización y el pago.</li>
+    </ol>
   </div>
 </div>
 
+<script>
+// Script que controla la apertura y cierre del modal
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('how-to-buy-modal');
+  if (!modal) return;
+
+  const closeBtn = modal.querySelector('.modal-close-btn');
+  const openTriggers = document.querySelectorAll('[data-open-modal="how-to-buy-modal"]');
+
+  const openModal = () => modal.classList.remove('hidden');
+  const closeModal = () => modal.classList.add('hidden');
+
+  openTriggers.forEach(trigger => trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    openModal();
+  }));
+
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+});
+</script>
+
 <style>
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-    justify-content: center;
-    align-items: center;
-  }
-  .modal:global(.is-open) {
-    display: flex;
-  }
-  .modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 10px;
-    position: relative;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-  }
-  .close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    cursor: pointer;
-  }
-  .instructions { text-align: center; padding-top: 20px; }
-  .step { padding: 20px; margin-bottom: 15px; border-radius: 8px; color: #333; }
-  .step h1 { font-size: 3rem; margin-bottom: 10px; }
-  .step p { font-size: 1.2rem; margin: 0; }
-  .step-1 { background-color: #cce7ff; }
-  .step-2 { background-color: #fffac9; }
-  .step-3 { background-color: #ffe6cc; }
+/* Estilos para el modal */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:1;transition:opacity .3s ease}.modal-overlay.hidden{opacity:0;pointer-events:none}.modal-content{background-color:#fff;padding:2rem;border-radius:12px;max-width:500px;width:90%;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.2)}.modal-close-btn{position:absolute;top:.5rem;right:.75rem;background:0 0;border:0;font-size:2rem;color:#aaa;cursor:pointer;line-height:1}.modal-content h3{margin-top:0;font-size:1.5rem}.modal-content ol{padding-left:1.5rem}.modal-content li{margin-bottom:1rem;line-height:1.6}
+</style>
+
+<style is:global>
+/* SOLUCIÓN A LAS COLUMNAS: Esta regla se aplicará a toda la página */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
 </style>

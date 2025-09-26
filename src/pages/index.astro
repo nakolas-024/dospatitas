@@ -2,116 +2,52 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
+// import Categories from '../components/Categories.astro'; // <-- 1. Se elimina la importación
+import Footer from '../components/Footer.astro';
 import ProductCard from '../components/ProductCard.astro';
 import HowToBuyModal from '../components/HowToBuyModal.astro';
-import Footer from '../components/Footer.astro';
+import products from '../data/products.js';
 
-// 1. Define la URL de tu panel de Strapi en Render
-const strapiUrl = 'https://backend-dospatitas.onrender.com';
-
-let products = [];
-try {
-  // 2. Llama a la API de Strapi para obtener la lista de productos
-  // 'populate=*' es MUY importante para que se incluyan las imágenes
-  const response = await fetch(`${strapiUrl}/api/products?populate=*`);
-  if (response.ok) {
-    const data = await response.json();
-    products = data.data; // Los productos están en la propiedad 'data'
-  } else {
-    console.error('Error al obtener productos:', response.statusText);
-  }
-} catch (error) {
-  console.error('Error de conexión:', error);
+function shuffle(array) {
+  return array.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value);
 }
+const featuredProducts = shuffle(products).slice(0, 6);
 ---
 
-<Layout title="Dos Patitas - Tienda Online">
-  <Header />
-  <main>
-    <Hero />
-
-    <section class="featured-products container">
-      <h2>Destacados de nuestra tienda</h2>
-      <div class="product-grid">
-        {products.length > 0 ? (
-          products.map(product => {
-            // Extraemos los datos de cada producto
-            const { nombre, categoria } = product.attributes;
-            // Aseguramos que haya al menos una imagen antes de intentar mostrarla
-            const firstImage = product.attributes.imagenes.data?.[0];
-            const imageUrl = firstImage ? `${strapiUrl}${firstImage.attributes.url}` : '/images/placeholder.png'; // <-- Pon una imagen de respaldo
-
-            return (
-              <ProductCard
-                imgSrc={imageUrl}
-                category={categoria}
-                title={nombre}
-                price="" 
-              />
-            );
-          })
-        ) : (
-          <p>No hay productos para mostrar en este momento.</p>
-        )}
-      </div>
-    </section>
-  </main>
-  
-  <Footer />
-
-  <HowToBuyModal />
+<Layout title="Dos Patitas - Carnets de Control Sano Personalizados">
+  <Header />
+  <main>
+    <Hero />
+    {featuredProducts.length > 0 && (
+      <section class="featured-products">
+        <div class="container">
+          <div class="section-header">
+            <h2>Diseños Destacados</h2>
+            <p class="subtitle">Una selección de nuestros carnets más queridos por nuestros clientes.</p>
+          </div>
+          <div class="product-grid">
+            {featuredProducts.map(product => (
+              <ProductCard
+                imgSrc={product.images[0] || '/images/placeholder.png'}
+                title={product.name}
+                category={product.category}
+                price={product.price}
+              />
+              ))}
+            </div>
+          <div class="section-footer">
+            <a href="/catalogo" class="btn-view-all">Ver todos los diseños</a>
+          </div>
+        </div>
+      </section>
+    )}
+    {/* <Categories /> -- 2. Se elimina el componente de aquí */}
+  </main>
+  <Footer />
+  <HowToBuyModal />
 </Layout>
 
 <style>
-  /* Tus estilos se mantienen exactamente igual */
-  .featured-products {
-    text-align: center;
-    padding-top: 3rem;
-    padding-bottom: 3rem;
-  }
-  .featured-products h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-  }
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-  }
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
+/* Estilos completos y funcionales para el index */
+.featured-products{padding:5rem 1rem;background-color:#f9fafb}.container{max-width:1200px;margin:0 auto;padding:0 1.5rem;width:100%}.section-header{text-align:center;margin-bottom:3rem}.section-header h2{font-size:2.5rem;font-weight:800;color:#2d3748;margin:0 0 .5rem}.section-header .subtitle{font-size:1.1rem;color:#555;max-width:600px;margin:0 auto}.product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem}.section-footer{text-align:center;margin-top:3rem}.btn-view-all{display:inline-block;background-color:transparent;color:#2d3748;border:2px solid #ddd;padding:.9rem 2rem;border-radius:50px;text-decoration:none;font-weight:700;font-size:1rem;transition:all .3s ease}.btn-view-all:hover{background-color:#2d3748;color:#fff;border-color:#2d3748}@media (min-width:1536px){.container{max-width:1440px}}
 </style>
-
-<script>
-  // Tu script para el modal se mantiene exactamente igual
-  const openModalButtons = document.querySelectorAll('[data-open-modal]');
-  const closeModalButtons = document.querySelectorAll('[data-close-modal]');
-
-  openModalButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const modalId = button.dataset.openModal;
-      const modal = document.getElementById(modalId);
-      if (modal) {
-        modal.classList.add('is-open');
-      }
-    });
-  });
-
-  closeModalButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const modal = button.closest('[data-modal]');
-      if (modal) {
-        modal.classList.remove('is-open');
-      }
-    });
-  });
-  
-  document.addEventListener('click', event => {
-    if (event.target.matches('[data-modal]')) {
-      event.target.classList.remove('is-open');
-    }
-  });
-</script>

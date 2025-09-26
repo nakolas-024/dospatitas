@@ -1,40 +1,67 @@
 ---
-import WhatsAppButton from '../components/WhatsAppButton.astro';
+// Recomiendo mantener el nombre 'Cart.astro' ya que maneja toda la lógica del carro, no solo un botón.
+import Cart from '../components/Cart.astro';
 
 interface Props {
-	title: string;
+    title: string;
 }
 
 const { title } = Astro.props;
+const siteName = "Dos Patitas";
+const fullTitle = `${title} | ${siteName}`;
+const description = "Diseñamos carnets de control sano únicos y personalizados para niños, niñas y mascotas. Un recuerdo que atesorarás para siempre.";
 ---
 <!doctype html>
 <html lang="es">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="description" content="Tienda Online de Carnet de controles pediátricos" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
-	</head>
-	<body>
-		<slot />
-    <WhatsAppButton />
-	</body>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/images/social-preview.png" /> 
+    <meta name="theme-color" content="#f57c00" /> {/* Color naranja para la barra del navegador móvil */}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <slot />
+    <Cart />
+</body>
 </html>
+
 <style is:global>
-  :root {
-    --color-orange: #f57c00;
-    --color-dark-text: #333;
-    --color-light-bg: #fff;
-    --font-primary: 'Poppins', sans-serif;
-  }
-	body {
-		font-family: var(--font-primary);
-		margin: 0;
-    color: var(--color-dark-text);
-	}
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/* === PALETA DE COLORES ACTUALIZADA A NARANJA === */
+:root {
+  --color-primary: #f57c00; /* Naranja principal */
+  --color-primary-dark: #d87100; /* Naranja oscuro para hover */
+  --color-secondary: #76d497;
+  --color-text-dark: #2d3748;
+  --color-text-light: #555;
+  --color-background: #ffffff;
+  --color-background-alt: #f9fafb;
+  --font-primary: 'Poppins', sans-serif;
+}
+
+body {
+  font-family: var(--font-primary);
+  margin: 0;
+  color: var(--color-text-dark);
+  background-color: var(--color-background);
+}
 </style>

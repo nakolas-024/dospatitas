@@ -1,35 +1,79 @@
 ---
 import Icon from './Icon.astro';
+
+const socialLinks = [
+  { href: 'https://www.instagram.com/TUPERFILDEINSTAGRAM', label: 'Instagram', icon: 'mdi:instagram' },
+  { href: 'https://www.facebook.com/TUPAGINADEFACEBOOK', label: 'Facebook', icon: 'mdi:facebook' },
+  { href: 'https://wa.me/56966306409', label: 'WhatsApp', icon: 'mdi:whatsapp' },
+];
+
+const linkColumns = [
+  {
+    title: 'Tienda',
+    links: [
+      { href: '/catalogo/ninos', text: 'Niños' },
+      { href: '/catalogo/ninas', text: 'Niñas' },
+      { href: '/catalogo/veterinarios', text: 'Mascotas' },
+    ]
+  },
+  {
+    title: 'Ayuda',
+    links: [
+      { href: '#', text: 'Cómo Comprar', modal: 'how-to-buy-modal'},
+      { href: '/preguntas-frecuentes', text: 'Preguntas Frecuentes' },
+      { href: '/contacto', text: 'Contacto' },
+    ]
+  }
+];
+
+const currentYear = new Date().getFullYear();
 ---
-<footer>
-  <div class="container">
-    <a href="/" class="logo">
-      <img src="/images/dospatitas-logo-blanco.png" alt="Dos Patitas Logo">
-    </a>
-    <a href="https://www.facebook.com/TUPAGINADEFACEBOOK" class="social-icon" target="_blank" rel="noopener noreferrer" aria-label="Visita nuestra página de Facebook">
-      <Icon name="facebook" size={30} />
-    </a>
-  </div>
+
+<footer class="site-footer">
+  <div class="footer-content container">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <img src="/images/dospatitas-logo-blanco.png" alt="Dos Patitas Logo">
+      </a>
+      <p class="tagline">Recuerdos personalizados para cada etapa de la vida.</p>
+    </div>
+
+    {linkColumns.map(column => (
+      <div class="footer-links">
+        <h4>{column.title}</h4>
+        <ul>
+          {column.links.map(link => (
+            <li><a href={link.href} data-open-modal={link.modal}>{link.text}</a></li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+
+  <div class="footer-bottom container">
+    <div class="copyright">
+      <p>&copy; {currentYear} Dos Patitas. Todos los derechos reservados.</p>
+      <p class="made-with-love">Hecho con ❤️</p>
+    </div>
+    <div class="social-links">
+      {socialLinks.map(link => (
+        <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`Visita nuestro ${link.label}`}>
+          <Icon name={link.icon} size={24} />
+        </a>
+      ))}
+    </div>
+  </div>
 </footer>
 
 <style>
-  footer {
-    background-color: var(--color-orange);
-    padding: 1.5rem 0;
-    margin-top: 3rem;
-  }
-  .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
-  .logo img {
-    max-height: 40px;
-  }
-  .social-icon {
-    color: white;
-  }
+/* Estilos completos para el pie de página */
+.site-footer{
+  background-color: var(--color-primary); /* Color naranja principal */
+  color:#fff;
+  padding:3rem 0 0;
+  margin-top:4rem;
+  font-size:.95rem
+}
+.container{max-width:1200px;margin:0 auto;padding:0 1.5rem}.footer-content{display:grid;grid-template-columns:2fr 1fr 1fr;gap:2rem;padding-bottom:2rem}.footer-brand .logo img{max-height:45px;margin-bottom:1rem}.footer-brand .tagline{color:rgba(255,255,255,.9);max-width:250px}.footer-links h4{font-size:1.1rem;font-weight:700;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.5px}.footer-links ul{list-style:none;padding:0;margin:0}.footer-links li{margin-bottom:.75rem}.footer-links a{color:rgba(255,255,255,.9);text-decoration:none;transition:color .2s ease}.footer-links a:hover{color:#fff;text-decoration:underline}.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding:1.5rem;border-top:1px solid rgba(255,255,255,.2)}.copyright p{margin:0;color:rgba(255,255,255,.8);font-size:.9rem}.copyright .made-with-love{font-size:.85rem}.social-links{display:flex;gap:1.25rem}.social-links a{color:#fff;transition:transform .2s ease}.social-links a:hover{transform:scale(1.2)}@media (max-width:768px){.footer-content{grid-template-columns:1fr;text-align:center}.footer-brand .tagline{margin:0 auto}.footer-bottom{flex-direction:column;gap:1.5rem}.copyright{text-align:center;order:2}.social-links{order:1}}
 </style>
+

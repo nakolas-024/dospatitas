@@ -1,0 +1,117 @@
+---
+// src/components/Cart.astro
+---
+<div id="cart-container" class="cart-container">
+  <button id="cart-toggle-button" class="cart-toggle-button" aria-label="Abrir carro de compras">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <span id="cart-counter" class="cart-counter">0</span>
+  </button>
+
+  <div id="cart-content" class="cart-content hidden">
+    <div class="cart-header">
+      <h3>Tu Pedido</h3>
+      <button id="cart-close-button" class="cart-close-button" aria-label="Cerrar carro de compras">×</button>
+    </div>
+    <div id="cart-items-list" class="cart-items-list">
+      <p>Aún no tienes diseños en tu pedido.</p>
+    </div>
+    <div class="cart-footer">
+      <a id="whatsapp-link" class="whatsapp-button disabled" href="#" target="_blank" rel="noopener noreferrer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.269.655 4.398 1.908 6.161l.16.244-1.036 3.787 3.849-1.048.251.147z"/></svg>
+        Hacer Pedido
+      </a>
+      <button id="clear-cart-button" class="clear-cart-button">Vaciar pedido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// El script completo que hace funcionar el carro (sin cambios)
+document.addEventListener('DOMContentLoaded', () => {
+  const cartContainer = document.getElementById('cart-container');
+  const toggleButton = document.getElementById('cart-toggle-button');
+  const closeButton = document.getElementById('cart-close-button');
+  const cartContent = document.getElementById('cart-content');
+  const cartCounter = document.getElementById('cart-counter');
+  const itemsList = document.getElementById('cart-items-list');
+  const whatsappLink = document.getElementById('whatsapp-link');
+  const clearCartButton = document.getElementById('clear-cart-button');
+  const phoneNumber = "56966306409";
+  let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+
+  function updateCartView() {
+    cartCounter.textContent = cart.length.toString();
+    if (cart.length > 0) {
+      cartCounter.style.display = 'flex';
+    } else {
+      cartCounter.style.display = 'none';
+    }
+    
+    if (cart.length === 0) {
+      itemsList.innerHTML = '<p class="empty-message">Aún no tienes diseños en tu pedido.</p>';
+      whatsappLink.classList.add('disabled');
+      clearCartButton.style.display = 'none';
+    } else {
+      itemsList.innerHTML = `<ul>${cart.map(p => `<li>${p.name}</li>`).join('')}</ul>`;
+      whatsappLink.classList.remove('disabled');
+      clearCartButton.style.display = 'block';
+      const introMessage = '¡Hola! Me gustaría hacer un pedido con los siguientes diseños:\n\n';
+      const productLines = cart.map(p => `• ${p.name}`).join('\n');
+      const finalMessage = introMessage + productLines + '\n\n¡Quedo atento/a!';
+      whatsappLink.href = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(finalMessage)}`;
+    }
+  }
+
+  function saveCart() {
+    localStorage.setItem('shoppingCart', JSON.stringify(cart));
+  }
+
+  function clearCart() {
+    if (cart.length > 0 && confirm('¿Estás seguro de que quieres vaciar tu pedido?')) {
+        cart = [];
+        saveCart();
+        updateCartView();
+    }
+  }
+
+  document.addEventListener('addToCart', (event) => {
+    const product = event.detail;
+    if (!cart.some(item => item.name === product.name)) {
+      cart.push(product);
+      saveCart();
+      updateCartView();
+      cartContainer.classList.add('item-added');
+      setTimeout(() => cartContainer.classList.remove('item-added'), 500);
+    }
+  });
+
+  toggleButton.addEventListener('click', () => cartContent.classList.toggle('hidden'));
+  closeButton.addEventListener('click', () => cartContent.classList.add('hidden'));
+  clearCartButton.addEventListener('click', clearCart);
+
+  updateCartView();
+});
+</script>
+
+<style>
+/* === ESTILOS ACTUALIZADOS A LA PALETA NARANJA === */
+.cart-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000}
+.cart-toggle-button{
+  background-color: var(--color-primary); /* Naranja */
+  color: white; /* Texto blanco para mejor contraste */
+  border:none;border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:transform .2s ease
+}
+.cart-toggle-button:hover{transform:scale(1.1)}
+.cart-container.item-added .cart-toggle-button{animation:bounce .5s ease}@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.cart-counter{
+  position:absolute;top:-2px;right:-2px;
+  background-color: var(--color-primary-dark); /* Naranja oscuro */
+  color:#fff;border-radius:50%;padding:.1rem .4rem;font-size:12px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid #fff
+}
+.cart-content{position:absolute;bottom:80px;right:0;width:320px;background:#fff;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,.2);display:flex;flex-direction:column;transition:opacity .3s ease,transform .3s ease;opacity:1;transform:translateY(0)}.cart-content.hidden{opacity:0;transform:translateY(10px);pointer-events:none}.cart-header{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1.25rem;border-bottom:1px solid #eee}.cart-header h3{margin:0;font-size:1.1rem;font-weight:700}.cart-close-button{background:0 0;border:0;font-size:24px;cursor:pointer;color:#aaa;line-height:1}.cart-items-list{padding:1rem 1.25rem;max-height:300px;overflow-y:auto}.cart-items-list .empty-message{color:#777;text-align:center;padding:2rem 0}.cart-items-list ul{list-style:none;padding:0;margin:0;text-align:left}.cart-items-list li{padding:.6rem 0;border-bottom:1px solid #f0f0f0;font-size:.95rem}.cart-items-list li:last-child{border-bottom:0}.cart-footer{padding:1rem 1.25rem;border-top:1px solid #eee;display:flex;flex-direction:column;gap:.5rem}.whatsapp-button{display:flex;align-items:center;justify-content:center;gap:.5rem;background-color:#25d366;color:#fff;padding:.8rem 1.5rem;border-radius:8px;text-decoration:none;font-weight:700;transition:background-color .2s}.whatsapp-button:hover{background-color:#128c7e}.whatsapp-button.disabled{background-color:#ccc;cursor:not-allowed;pointer-events:none}
+.clear-cart-button{
+  background:0 0;border:0;
+  color: var(--color-primary-dark); /* Naranja oscuro */
+  cursor:pointer;font-size:.9rem;padding:.25rem;text-align:center;display:none
+}
+</style>

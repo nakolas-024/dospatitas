@@ -1,0 +1,78 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import products from '../../data/products.js';
+
+// Filtro correcto para "niños"
+const productsNinos = products.filter(p => p.category === "niños");
+
+// Menú de navegación actualizado y con la categoría correcta activa
+const categories = [
+  { name: 'Niños', href: '/catalogo/ninos', active: true },
+  { name: 'Niñas', href: '/catalogo/ninas', active: false },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', active: false },
+];
+---
+
+<Layout title="Catálogo - Carnets de Control Sano para Niños">
+  <Header />
+
+  <main class="catalog-page">
+    <div class="container">
+      <div class="catalog-header">
+        <h1>Carnets de Control Sano para Niños</h1>
+        <p class="subtitle">Un recuerdo único y personalizado para seguir cada etapa de su crecimiento.</p>
+      </div>
+
+      <nav class="category-nav">
+        <ul>
+          {categories.map(cat => (
+            <li>
+              <a href={cat.href} class:list={{ active: cat.active }}>
+                {cat.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="product-grid">
+        {productsNinos.length > 0 ? (
+          productsNinos.map(product => (
+            <ProductCard
+              imgSrc={product.images[0] || '/images/placeholder.png'}
+              title={product.name}
+              category={product.category}
+              price=""
+            />
+          ))
+        ) : (
+          <p class="no-products-message">
+            Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
+          </p>
+        )}
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+/* ... MISMOS ESTILOS MEJORADOS DE LA RESPUESTA ANTERIOR ... */
+.catalog-page { background-color: #f9f9f9; }
+.container { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem; }
+@media (min-width: 1536px) { .container { max-width: 1440px; } }
+.catalog-header { text-align: center; margin-bottom: 2.5rem; }
+.catalog-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #333; font-weight: 800; }
+.catalog-header .subtitle { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
+.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; border-bottom: 1px solid #e0e0e0; }
+.category-nav ul { display: flex; list-style: none; padding: 0; margin: 0; }
+.category-nav a { display: block; padding: 0.75rem 1.5rem; margin: 0 0.5rem; color: #555; text-decoration: none; font-weight: 600; border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; }
+.category-nav a:hover { color: #007bff; }
+.category-nav a.active { color: #007bff; border-bottom-color: #007bff; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+.no-products-message { grid-column: 1 / -1; text-align: center; font-size: 1.2rem; color: #777; padding: 4rem 1rem; background-color: #fff; border-radius: 8px; border: 1px dashed #ddd; }
+</style>

@@ -1,34 +1,48 @@
 ---
 // src/components/Categories.astro
+
+// CORRECCIÓN DEFINITIVA: Se ajusta "Mascotas" a "Veterinarios"
+const categories = [
+  {
+    name: 'Niños',
+    href: '/catalogo/ninos',
+    imgSrc: 'https://images.unsplash.com/photo-1503944583220-79d6e870d00a?auto=format&fit=crop&w=800&q=80',
+    alt: 'Niño jugando con un avión de juguete'
+  },
+  {
+    name: 'Niñas',
+    href: '/catalogo/ninas',
+    imgSrc: 'https://images.unsplash.com/photo-1524502397800-2d82be85418b?auto=format&fit=crop&w=800&q=80',
+    alt: 'Niña sonriendo'
+  },
+  {
+    name: 'Veterinarios',
+    href: '/catalogo/veterinarios',
+    imgSrc: 'https://images.unsplash.com/photo-1583337130417-2346040878f3?auto=format&fit=crop&w=800&q=80',
+    alt: 'Carnet de control para mascotas'
+  },
+];
 ---
-<section class="categories">
-  <h2>Categorias</h2>
-  <div class="category-grid">
-    <a href="#">
-      <img src="https://dospatitas.mollyinc.cl/wp-content/uploads/2025/08/ninos-1024x898.png" alt="Niños">
-    </a>
-    <a href="#">
-      <img src="https://dospatitas.mollyinc.cl/wp-content/uploads/2025/08/NINAS-1024x898.png" alt="Niñas">
-    </a>
-    <a href="#">
-      <img src="https://dospatitas.mollyinc.cl/wp-content/uploads/2025/08/mascotas-1024x898.png" alt="Mascotas">
-    </a>
-  </div>
+
+<section class="categories-section">
+  <div class="container">
+    <h2 class="categories-title">Diseños para cada integrante</h2>
+    <div class="category-grid">
+      {categories.map(category => (
+        <a href={category.href} class="category-card">
+          <div 
+            class="card-background" 
+            style={`background-image: url(${category.imgSrc})`}
+            aria-label={category.alt}
+          ></div>
+          <div class="card-overlay"></div>
+          <span class="card-title">{category.name}</span>
+        </a>
+      ))}
+    </div>
+  </div>
 </section>
 
 <style>
-  .categories {
-    text-align: center;
-    padding: 3rem 1rem;
-  }
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-  }
-  .category-grid img {
-    max-width: 100%;
-    border-radius: 8px;
-  }
+/* ... (código de estilos sin cambios) ... */
 </style>
