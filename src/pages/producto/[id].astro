@@ -1,0 +1,43 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ProductFullCard from '../../components/ProductFullCard.astro';
+import { supabase } from '../../lib/supabaseClient';
+
+const { id } = Astro.params;
+const { data: product, error } = await supabase
+  .from('products')
+  .select('*')
+  .eq('id', id)
+  .single();
+---
+
+<Layout title={product ? product.name : 'Producto'}>
+  <Header />
+  <main class="product-page">
+    {error ? (
+      <p class="error">Error al cargar el producto.</p>
+    ) : product ? (
+      <ProductFullCard product={product} />
+    ) : (
+      <p class="no-product">Producto no encontrado.</p>
+    )}
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+.product-page {
+  background: #fef7fb;
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+.error, .no-product {
+  text-align: center;
+  padding: 4rem;
+  font-size: 1.3rem;
+  color: #666;
+}
+</style>

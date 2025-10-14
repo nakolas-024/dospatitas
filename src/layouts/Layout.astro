@@ -1,19 +1,20 @@
 ---
-// Recomiendo mantener el nombre 'Cart.astro' ya que maneja toda la lógica del carro, no solo un botón.
+// Layout principal
 import Cart from '../components/Cart.astro';
 
 interface Props {
-    title: string;
+  title: string;
 }
 
 const { title } = Astro.props;
 const siteName = "Dos Patitas";
 const fullTitle = `${title} | ${siteName}`;
 const description = "Diseñamos carnets de control sano únicos y personalizados para niños, niñas y mascotas. Un recuerdo que atesorarás para siempre.";
+const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 ---
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -21,47 +22,113 @@ const description = "Diseñamos carnets de control sano únicos y personalizados
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={currentUrl} />
+
+    <!-- Open Graph -->
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/images/social-preview.png" /> 
-    <meta name="theme-color" content="#f57c00" /> {/* Color naranja para la barra del navegador móvil */}
+    <meta property="og:image" content="/images/social-preview.png" />
+    <meta property="og:url" content={currentUrl} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="/images/social-preview.png" />
+
+    <meta name="theme-color" content="#f57c00" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body>
+  </head>
+
+  <body>
     <slot />
+
     <Cart />
-</body>
+
+    <script is:inline>
+      document.addEventListener('click', (e) => {
+        // --- Modal universal "Cómo Comprar" ---
+        const openBtn = e.target.closest('[data-open-modal]');
+        if(openBtn){
+          const modalId = openBtn.dataset.openModal;
+          const modal = modalId ? document.getElementById(modalId) : null;
+          if(modal){
+            e.preventDefault();
+            modal.classList.remove('hidden');
+          }
+        }
+
+        // --- Cerrar modal ---
+        if(e.target.matches('[data-close-modal]') || e.target.classList.contains('modal')){
+          const modal = e.target.closest('.modal');
+          modal?.classList.add('hidden');
+        }
+      });
+
+      // --- Header scroll effect ---
+      const header = document.getElementById('site-header');
+      if(header){
+        window.addEventListener('scroll', () => {
+          header.classList.toggle('scrolled', window.scrollY > 10);
+        });
+      }
+
+      // --- Mobile menu toggle ---
+      const hamburgerBtn = document.getElementById('hamburger-menu');
+      const closeMenuBtn = document.getElementById('close-menu');
+      const mobileMenuPanel = document.getElementById('mobile-menu-panel');
+
+      if(hamburgerBtn && closeMenuBtn && mobileMenuPanel){
+        hamburgerBtn.addEventListener('click', () => {
+          mobileMenuPanel.classList.add('is-open');
+          hamburgerBtn.setAttribute('aria-expanded', 'true');
+          mobileMenuPanel.setAttribute('aria-hidden', 'false');
+        });
+
+        closeMenuBtn.addEventListener('click', () => {
+          mobileMenuPanel.classList.remove('is-open');
+          hamburgerBtn.setAttribute('aria-expanded', 'false');
+          mobileMenuPanel.setAttribute('aria-hidden', 'true');
+        });
+      }
+    </script>
+
+    <style is:global>
+      html { box-sizing: border-box; scroll-behavior: smooth; }
+      *, *:before, *:after { box-sizing: inherit; }
+
+      :root {
+        --color-primary: #f57c00;
+        --color-primary-dark: #d87100;
+        --color-secondary: #76d497;
+        --color-text-dark: #2d3748;
+        --color-text-light: #555;
+        --color-background: #ffffff;
+        --color-background-alt: #f9fafb;
+        --font-primary: 'Poppins', sans-serif;
+
+        /* Tamaños de fuente */
+        --font-size-base: 1rem;
+        --font-size-lg: 1.125rem;
+        --font-size-xl: 1.25rem;
+      }
+
+      body {
+        font-family: var(--font-primary);
+        margin: 0;
+        color: var(--color-text-dark);
+        background-color: var(--color-background);
+      }
+
+      /* Header scroll */
+      header.scrolled { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+
+      /* Smooth dropdown transitions */
+      .dropdown-menu, .mobile-menu-panel { transition: all 0.3s ease-in-out; }
+    </style>
+  </body>
 </html>
-
-<style is:global>
-html {
-  box-sizing: border-box;
-  scroll-behavior: smooth;
-}
-*, *:before, *:after {
-  box-sizing: inherit;
-}
-
-/* === PALETA DE COLORES ACTUALIZADA A NARANJA === */
-:root {
-  --color-primary: #f57c00; /* Naranja principal */
-  --color-primary-dark: #d87100; /* Naranja oscuro para hover */
-  --color-secondary: #76d497;
-  --color-text-dark: #2d3748;
-  --color-text-light: #555;
-  --color-background: #ffffff;
-  --color-background-alt: #f9fafb;
-  --font-primary: 'Poppins', sans-serif;
-}
-
-body {
-  font-family: var(--font-primary);
-  margin: 0;
-  color: var(--color-text-dark);
-  background-color: var(--color-background);
-}
-</style>

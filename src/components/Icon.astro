@@ -7,48 +7,27 @@ interface Props extends HTMLAttributes<'svg'> {
 }
 
 const { name, size = 24, class: className, ...rest } = Astro.props;
-
-// Paths SVG de los íconos
-const icons = {
-  cart: `
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-    <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-    <path d="M17 17h-11v-14h-2" />
-    <path d="M6 5l14 1l-1 7h-13" />
-  `,
-  facebook: `
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" />
-  `,
-  whatsapp: `
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" />
-    <path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" />
-  `,
-};
 ---
 
 { name === 'dospatitas' ? (
+  // 🐾 Logo principal (imagen)
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 564.55 216"
     class:list={["icon", `icon-${name}`, className]}
     width={size}
     height="auto"
+    preserveAspectRatio="xMidYMid meet"
     {...rest}
   >
-    <g id="Capa_2" data-name="Capa 2">
-      <g id="Capa_1-2" data-name="Capa 1">
-        <image
-          width="564.55"
-          height="216"
-          xlink:href="/images/dospatitas-logo.png" 
-        />
-      </g>
-    </g>
+    <image
+      width="564.55"
+      height="216"
+      href="/images/dospatitas-logo.png"
+    />
   </svg>
-) : (
+) : name === 'cart' ? (
+  // 🛒 Ícono carrito
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -56,6 +35,53 @@ const icons = {
     width={size}
     height={size}
     {...rest}
-    innerHTML={icons[name]}
-  />
-)}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+    <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+    <path d="M17 17h-11v-14h-2" />
+    <path d="M6 5l14 1l-1 7h-13" />
+  </svg>
+) : name === 'facebook' ? (
+  // 📘 Ícono Facebook
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    class:list={["icon", `icon-${name}`, className]}
+    width={size}
+    height={size}
+    {...rest}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" />
+  </svg>
+) : name === 'whatsapp' ? (
+  // 💬 Ícono WhatsApp
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    class:list={["icon", `icon-${name}`, className]}
+    width={size}
+    height={size}
+    {...rest}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" />
+    <path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" />
+  </svg>
+) : null }
+
+<style>
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
+}
+
+.icon-dospatitas {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
+}
+</style>

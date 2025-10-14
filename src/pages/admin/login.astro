@@ -1,45 +1,138 @@
 ---
-import { supabase } from '../../lib/supabase';
+import Layout from "../../layouts/Layout.astro";
+export const prerender = false;
 
-let error = null;
+let error = "";
 
-if (Astro.request.method === 'POST') {
-  const data = await Astro.request.formData();
-  const email = data.get('email');
-  const password = data.get('password');
+// Solo procesar si es POST
+if (Astro.request.method === "POST") {
+  const contentType = Astro.request.headers.get("content-type") || "";
 
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('email', email)
-    .eq('password', password)
-    .single();
+  let user = "";
+  let pass = "";
 
-  if (admin) {
-    // Guardar sesión en cookie local (simple, ejemplo)
-    return Astro.redirect('/admin/dashboard');
+  // Asegurar compatibilidad con application/x-www-form-urlencoded
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const body = await Astro.request.text();
+    const params = new URLSearchParams(body);
+    user = params.get("user") || "";
+    pass = params.get("pass") || "";
+  }
+
+  // Validar credenciales
+  if (user === "dospatitas" && pass === "dospatitas2025") {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: "/admin",
+        "Set-Cookie": `auth=true; Path=/; HttpOnly; SameSite=Lax`,
+      },
+    });
   } else {
-    error = 'Credenciales incorrectas';
+    error = "Usuario o contraseña incorrectos";
   }
 }
 ---
 
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Login Admin | Dos Patitas</title>
-  </head>
-  <body class="flex items-center justify-center h-screen bg-gray-100">
-    <form method="post" class="bg-white p-10 rounded-xl shadow-lg w-96">
-      <h1 class="text-2xl font-bold mb-6 text-center">Panel de Administración</h1>
-      <input type="email" name="email" placeholder="Correo" class="border p-3 w-full mb-4 rounded" required />
-      <input type="password" name="password" placeholder="Contraseña" class="border p-3 w-full mb-4 rounded" required />
-      {error && <p class="text-red-500 mb-4">{error}</p>}
-      <button type="submit" class="bg-blue-600 text-white font-bold py-3 w-full rounded hover:bg-blue-700 transition">Entrar</button>
-    </form>
-  </body>
-</html>
+<Layout title="Iniciar sesión | Dospatitas">
+  <style>
+    main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #fff7f5 0%, #ffe4dc 100%);
+      font-family: "Poppins", sans-serif;
+    }
 
-<style>
-body { font-family: sans-serif; }
-</style>
+    form {
+      background: white;
+      padding: 2.5rem 3rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      color: #f06d4f;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 1rem;
+      margin-bottom: 0.4rem;
+      color: #444;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #f06d4f;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      background: #f06d4f;
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #d85f45;
+    }
+
+    p.error {
+      color: #c62828;
+      font-size: 0.9rem;
+      margin-top: 0.8rem;
+      background: #ffeaea;
+      padding: 0.6rem;
+      border-radius: 8px;
+    }
+
+    .logo {
+      width: 180px;
+      margin: 0 auto 1.5rem auto;
+      display: block;
+    }
+  </style>
+
+  <main>
+    <form method="POST" enctype="application/x-www-form-urlencoded">
+      <img src="/images/dospatitas-logo.png" alt="Dospatitas" class="logo" />
+      <h1>Acceso Administrativo</h1>
+
+      <label for="user">Usuario</label>
+      <input type="text" id="user" name="user" placeholder="Ej: dospatitas" required />
+
+      <label for="pass">Contraseña</label>
+      <input type="password" id="pass" name="pass" placeholder="••••••••••" required />
+
+      <button type="submit">Ingresar</button>
+
+      {error && <p class="error">{error}</p>}
+    </form>
+  </main>
+</Layout>

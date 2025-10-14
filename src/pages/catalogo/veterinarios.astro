@@ -1,120 +1,54 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import ProductCard from '../../components/ProductCard.astro';
-import products from '../../data/products.js';
+import ProductCardFull from "@/components/ProductCardFull.astro";
+import supabase from "@/lib/supabaseClient";
 
-const productsMascotas = products.filter(p => p.category === "veterinarios");
+const { data: products, error } = await supabase
+  .from("productos")
+  .select("*")
+  .eq("categoria", "veterinarios");
 
-const categories = [
-  { name: 'Niños', href: '/catalogo/ninos', active: false },
-  { name: 'Niñas', href: '/catalogo/ninas', active: false },
-  { name: 'Mascotas', href: '/catalogo/veterinarios', active: true },
-];
+if (error) {
+  console.error("Error cargando productos:", error.message);
+}
 ---
 
-<Layout title="Catálogo - Carnets de Control para Mascotas">
-  <Header />
-  <main class="catalog-page">
-    <div class="container">
-      <div class="catalog-header">
-        <h1>Carnets de Control para Mascotas</h1>
-        <p class="subtitle">Lleva un registro de vacunas y visitas de tu mejor amigo.</p>
-      </div>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Veterinarios | Molly Inc</title>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <section class="max-w-6xl mx-auto px-4 py-10">
+      <h1 class="text-3xl font-bold text-center mb-10">Veterinarios</h1>
 
-      <nav class="category-nav">
-        <ul>
-          {categories.map(cat => (
-            <li>
-              <a href={cat.href} class:list={{ active: cat.active }}>
-                {cat.name}
-              </a>
-            </li>
+      {error ? (
+        <p class="text-center text-red-500">
+          Error al cargar productos: {error.message}
+        </p>
+      ) : products && products.length > 0 ? (
+        <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((product) => (
+            <ProductCardFull product={product} />
           ))}
-        </ul>
-      </nav>
-
-      <div class="product-grid">
-        {productsMascotas.length > 0 ? (
-          productsMascotas.map(product => (
-            <ProductCard
-              imgSrc={product.images[0] || '/images/placeholder.png'}
-              title={product.name}
-              category={product.category}
-            />
-          ))
-        ) : (
-          <p class="no-products-message">
-            Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
-          </p>
-        )}
-      </div>
-    </div>
-  </main>
-  <Footer />
-</Layout>
+        </div>
+      ) : (
+        <p class="text-center text-gray-500">No hay productos disponibles.</p>
+      )}
+    </section>
+  </body>
+</html>
 
 <style>
-.catalog-page { 
-  padding: 4rem 0; 
-  background-color: #fef7fb;
-}
-.container { 
-  max-width: 1200px; 
-  margin: 0 auto; 
-  padding: 0 1.5rem; 
-}
-@media (min-width: 1536px) { .container { max-width: 1440px; } }
+  body {
+    font-family: system-ui, sans-serif;
+  }
 
-.catalog-header { text-align: center; margin-bottom: 2.5rem; }
-.catalog-header h1 { font-size: 2.5rem; margin-bottom: .5rem; font-weight: 800; color: #333; }
-.catalog-header .subtitle { font-size: 1.1rem; color: #555; }
+  h1 {
+    color: #222;
+  }
 
-.category-nav { 
-  display: flex; 
-  justify-content: center; 
-  margin-bottom: 3rem; 
-  flex-wrap: wrap; 
-  gap: 0.5rem; 
-}
-.category-nav ul { display: flex; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; gap: 0.5rem; }
-.category-nav a { 
-  display: block;
-  padding: 0.6rem 1.4rem;
-  color: #555;
-  text-decoration: none;
-  font-weight: 600;
-  border-radius: 50px;
-  transition: all 0.25s ease-in-out;
-  border: 2px solid transparent;
-}
-.category-nav a:hover { 
-  color: #fff;
-  background: #fc9700;
-  border-color: #fc9700;
-}
-.category-nav a.active { 
-  color: #fff;
-  background: #f0ce0c;
-  border-color: #f0ce0c;
-}
-
-.product-grid { 
-  display: grid; 
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-  gap: 2rem; 
-}
-
-.no-products-message { 
-  grid-column: 1 / -1; 
-  text-align: center; 
-  font-size: 1.2rem; 
-  color: #777; 
-  padding: 4rem 1rem; 
-  background-color: #fff; 
-  border-radius: 12px; 
-  border: 1px dashed #ddd; 
-  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-}
+  .grid {
+    display: grid;
+  }
 </style>

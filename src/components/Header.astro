@@ -1,7 +1,7 @@
 ---
 import Icon from './Icon.astro';
 
-const navLinks = [
+const allNavLinks = [
   {
     text: 'Catálogo',
     href: '/catalogo',
@@ -22,7 +22,14 @@ const navLinks = [
   }
 ];
 
-const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+// Detecta la ruta actual correctamente en SSR y client
+const currentPath = Astro.url.pathname;
+
+// Filtra "Cómo Comprar" si no estamos en la index
+const navLinks = allNavLinks.filter(link => {
+  if (link.text === 'Cómo Comprar' && currentPath !== '/') return false;
+  return true;
+});
 ---
 
 <header id="site-header">
@@ -90,34 +97,60 @@ const currentPath = typeof window !== 'undefined' ? window.location.pathname : '
   </nav>
 </div>
 
-<script>
-const hamburgerBtn = document.getElementById('hamburger-menu');
-const closeMenuBtn = document.getElementById('close-menu');
-const mobileMenuPanel = document.getElementById('mobile-menu-panel');
+<script is:inline>
+document.addEventListener("DOMContentLoaded", () => {
+  // --- Menú móvil ---
+  const hamburgerBtn = document.getElementById('hamburger-menu');
+  const closeMenuBtn = document.getElementById('close-menu');
+  const mobileMenuPanel = document.getElementById('mobile-menu-panel');
 
-if (hamburgerBtn && closeMenuBtn && mobileMenuPanel) {
-  hamburgerBtn.addEventListener('click', () => {
-    mobileMenuPanel.classList.add('is-open');
-    hamburgerBtn.setAttribute('aria-expanded', 'true');
-    mobileMenuPanel.setAttribute('aria-hidden', 'false');
-  });
-  closeMenuBtn.addEventListener('click', () => {
-    mobileMenuPanel.classList.remove('is-open');
-    hamburgerBtn.setAttribute('aria-expanded', 'false');
-    mobileMenuPanel.setAttribute('aria-hidden', 'true');
-  });
-}
+  if (hamburgerBtn && closeMenuBtn && mobileMenuPanel) {
+    hamburgerBtn.addEventListener('click', () => {
+      mobileMenuPanel.classList.add('is-open');
+      hamburgerBtn.setAttribute('aria-expanded', 'true');
+      mobileMenuPanel.setAttribute('aria-hidden', 'false');
+    });
 
-const header = document.getElementById('site-header');
-if (header) {
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 10) header.classList.add('scrolled');
-    else header.classList.remove('scrolled');
+    closeMenuBtn.addEventListener('click', () => {
+      mobileMenuPanel.classList.remove('is-open');
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+      mobileMenuPanel.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  // --- Modal universal "Cómo comprar" ---
+  document.querySelectorAll('[data-open-modal]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const modalId = btn.dataset.openModal;
+      if (!modalId) return;
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        e.preventDefault();
+        modal.classList.remove('hidden');
+      }
+    });
   });
-}
+
+  // Cerrar modal
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('[data-close-modal]') || e.target.classList.contains('modal')) {
+      const modal = e.target.closest('.modal');
+      modal?.classList.add('hidden');
+    }
+  });
+
+  // --- Efecto scroll header ---
+  const header = document.getElementById('site-header');
+  if (header) {
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 10);
+    });
+  }
+});
 </script>
 
 <style>
+/* === HEADER BASE === */
 header {
   background-color: white;
   padding: 1rem 0;
