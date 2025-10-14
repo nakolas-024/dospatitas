@@ -5,63 +5,63 @@ import Footer from '../../components/Footer.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import products from '../../data/products.js';
 
-// Filtro correcto para "niños"
+// Filtrar productos para la categoría "niños"
 const productsNinos = products.filter(p => p.category === "niños");
 
-// Menú de navegación actualizado y con la categoría correcta activa
+// Menú con categoría activa
 const categories = [
-  { name: 'Niños', href: '/catalogo/ninos', active: true },
-  { name: 'Niñas', href: '/catalogo/ninas', active: false },
-  { name: 'Mascotas', href: '/catalogo/veterinarios', active: false },
+  { name: 'Niños', href: '/catalogo/ninos', active: true },
+  { name: 'Niñas', href: '/catalogo/ninas', active: false },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', active: false },
 ];
 ---
 
 <Layout title="Catálogo - Carnets de Control Sano para Niños">
-  <Header />
+  <Header />
 
-  <main class="catalog-page">
-    <div class="container">
-      <div class="catalog-header">
-        <h1>Carnets de Control Sano para Niños</h1>
-        <p class="subtitle">Un recuerdo único y personalizado para seguir cada etapa de su crecimiento.</p>
-      </div>
+  <main class="catalog-page">
+    <div class="container">
+      <div class="catalog-header">
+        <h1>Carnets de Control Sano para Niños</h1>
+        <p class="subtitle">Un recuerdo único y personalizado para seguir cada etapa de su crecimiento.</p>
+      </div>
 
-      <nav class="category-nav">
-        <ul>
-          {categories.map(cat => (
-            <li>
-              <a href={cat.href} class:list={{ active: cat.active }}>
-                {cat.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <!-- Menú de categorías -->
+      <nav class="category-nav">
+        <ul>
+          {categories.map(cat => (
+            <li>
+              <a href={cat.href} class:list={{ active: cat.active }}>
+                {cat.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-      <div class="product-grid">
-        {productsNinos.length > 0 ? (
-          productsNinos.map(product => (
-            <ProductCard
-              imgSrc={product.images[0] || '/images/placeholder.png'}
-              title={product.name}
-              category={product.category}
-              price=""
-            />
-          ))
-        ) : (
-          <p class="no-products-message">
-            Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
-          </p>
-        )}
-      </div>
-    </div>
-  </main>
+      <div class="product-grid">
+        {productsNinos.length > 0 ? (
+          productsNinos.map(product => (
+            <ProductCard
+              imgSrc={product.images[0] || '/images/placeholder.png'}
+              title={product.name}
+              category={product.category}
+              price=""
+            />
+          ))
+        ) : (
+          <p class="no-products-message">
+            Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
+          </p>
+        )}
+      </div>
+    </div>
+  </main>
 
-  <Footer />
+  <Footer />
 </Layout>
 
 <style>
-/* ... MISMOS ESTILOS MEJORADOS DE LA RESPUESTA ANTERIOR ... */
 .catalog-page { background-color: #f9f9f9; }
 .container { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem; }
 @media (min-width: 1536px) { .container { max-width: 1440px; } }

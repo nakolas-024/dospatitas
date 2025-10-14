@@ -2,13 +2,13 @@
 import type { HTMLAttributes } from 'astro/types';
 
 interface Props extends HTMLAttributes<'svg'> {
-  name: 'cart' | 'facebook' | 'whatsapp'; // Aquí defines los nombres de los iconos que tendrás
+  name: 'cart' | 'facebook' | 'whatsapp' | 'dospatitas';
   size?: number;
 }
 
 const { name, size = 24, class: className, ...rest } = Astro.props;
 
-// Un objeto que mapea nombres de iconos a su contenido SVG
+// Paths SVG de los íconos
 const icons = {
   cart: `
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -26,32 +26,36 @@ const icons = {
     <path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" />
     <path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" />
   `,
-  // Puedes añadir más iconos aquí
 };
-
-const iconPath = icons[name];
 ---
 
-{iconPath && (
+{ name === 'dospatitas' ? (
   <svg
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 564.55 216"
+    class:list={["icon", `icon-${name}`, className]}
+    width={size}
+    height="auto"
+    {...rest}
+  >
+    <g id="Capa_2" data-name="Capa 2">
+      <g id="Capa_1-2" data-name="Capa 1">
+        <image
+          width="564.55"
+          height="216"
+          xlink:href="/images/dospatitas-logo.png" 
+        />
+      </g>
+    </g>
+  </svg>
+) : (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
     class:list={["icon", `icon-${name}`, className]}
     width={size}
     height={size}
-    viewBox="0 0 24 24"
-    stroke-width="2"
-    stroke="currentColor"
-    fill="none"
-    stroke-linecap="round"
-    stroke-linejoin="round"
     {...rest}
-    set:html={iconPath}
+    innerHTML={icons[name]}
   />
 )}
-
-<style>
-  .icon {
-    display: inline-block;
-    vertical-align: middle;
-  }
-</style>

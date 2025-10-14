@@ -1,75 +1,135 @@
 ---
-export interface Props {
-  imgSrc: string;
-  title: string;
-  category: string;
-  price: string;
-}
-const { imgSrc, title, category, price } = Astro.props;
-const product = { name: title, price: price };
+// Props
+const { product } = Astro.props;
+
+// Valores seguros por si faltan datos
+const imgSrc = (product?.images?.[0]) || '/images/placeholder.png';
+const title = product?.name || 'Producto';
+const category = product?.category || 'Sin categoría';
+const price = product?.price; // opcional
 ---
+
 <div class="product-card" data-product={JSON.stringify(product)}>
-  <a href="#" class="image-link">
-    <img src={imgSrc} alt={`Imagen de ${title}`} loading="lazy" />
-  </a>
-  <div class="card-content">
-    <span class="category">{category}</span>
-    <h4>{title}</h4>
-    {price && <p class="price">{price}</p>}
-    <button class="add-to-cart-btn">Agregar al carro</button>
-  </div>
+  <a href="#" class="image-link">
+    <img src={imgSrc} alt={`Imagen de ${title}`} loading="lazy" />
+  </a>
+  <div class="card-content">
+    <span class="category">{category}</span>
+    <h4>{title}</h4>
+    {price && <p class="price">{price}</p>}
+    <button class="add-to-cart-btn">Agregar al carro</button>
+  </div>
 </div>
+
 <script>
-  // Script de delegación de eventos para agregar al carro
-  if (!document.body.dataset.cardScriptLoaded) {
-    document.body.dataset.cardScriptLoaded = 'true';
-    document.addEventListener('click', (event) => {
-      const button = event.target.closest('.add-to-cart-btn');
-      if (!button) return;
-      const card = button.closest('.product-card');
-      const productData = JSON.parse(card.dataset.product);
-      document.dispatchEvent(new CustomEvent('addToCart', { bubbles: true, detail: productData }));
-      button.textContent = '¡Agregado!';
-      button.disabled = true;
-      setTimeout(() => {
-        button.textContent = 'Agregar al carro';
-        button.disabled = false;
-      }, 1500);
-    });
-  }
+if (!document.body.dataset.cardScriptLoaded) {
+  document.body.dataset.cardScriptLoaded = 'true';
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.add-to-cart-btn');
+    if (!button) return;
+    const card = button.closest('.product-card');
+    const productData = card.dataset.product ? JSON.parse(card.dataset.product) : null;
+    if (!productData) return;
+
+    document.dispatchEvent(new CustomEvent('addToCart', { bubbles: true, detail: productData }));
+    button.textContent = '¡Agregado!';
+    button.disabled = true;
+    setTimeout(() => {
+      button.textContent = 'Agregar al carro';
+      button.disabled = false;
+    }, 1500);
+  });
+}
 </script>
+
 <style>
-/* Estilos completos para la tarjeta de producto */
-.product-card{background-color:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.05);overflow:hidden;display:flex;flex-direction:column;transition:transform .3s ease,box-shadow .3s ease}.product-card:hover{transform:translateY(-5px);box-shadow:0 8px 25px rgba(0,0,0,.1)}.image-link img{width:100%;height:250px;object-fit:cover;display:block}.card-content{padding:1.25rem;display:flex;flex-direction:column;flex-grow:1}
-.category{
-  font-size:.8rem;
-  font-weight:600;
-  color: var(--color-primary); /* Color naranja */
-  text-transform:uppercase;
-  margin-bottom:.5rem
+.product-card {
+  background-color: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
-.card-content h4{font-size:1.1rem;font-weight:700;color:#333;margin:0}.price{font-size:1.2rem;font-weight:700;color:#333;margin:.75rem 0 0}
-.add-to-cart-btn{
-  background-color: var(--color-primary); /* Color naranja */
-  color: white; /* Texto blanco para mejor contraste */
-  border:none;
-  padding:.75rem 1rem;
-  border-radius:8px;
-  cursor:pointer;
-  margin-top:auto;
-  width:100%;
-  font-weight:700;
-  transition:all .2s ease
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
 }
-.add-to-cart-btn:hover{
-  background-color: var(--color-primary-dark); /* Naranja oscuro */
-  transform:scale(1.02)
+
+.image-link {
+  overflow: hidden;
+  display: block;
 }
-.add-to-cart-btn:disabled{
-  background-color: var(--color-secondary); /* Verde */
-  color:#fff;
-  cursor:default;
-  transform:scale(1)
+
+.image-link img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.product-card:hover .image-link img {
+  transform: scale(1.05);
+}
+
+.card-content {
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.category {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-primary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.card-content h4 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  margin-bottom: 0.5rem;
+}
+
+.price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.add-to-cart-btn {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.25s ease;
+}
+
+.add-to-cart-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: scale(1.03);
+}
+
+.add-to-cart-btn:disabled {
+  background-color: var(--color-secondary);
+  color: #fff;
+  cursor: default;
+  transform: scale(1);
 }
 </style>
-

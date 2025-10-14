@@ -1,0 +1,45 @@
+---
+import { supabase } from '../../lib/supabase';
+
+let error = null;
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const email = data.get('email');
+  const password = data.get('password');
+
+  const { data: admin } = await supabase
+    .from('admins')
+    .select('*')
+    .eq('email', email)
+    .eq('password', password)
+    .single();
+
+  if (admin) {
+    // Guardar sesión en cookie local (simple, ejemplo)
+    return Astro.redirect('/admin/dashboard');
+  } else {
+    error = 'Credenciales incorrectas';
+  }
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login Admin | Dos Patitas</title>
+  </head>
+  <body class="flex items-center justify-center h-screen bg-gray-100">
+    <form method="post" class="bg-white p-10 rounded-xl shadow-lg w-96">
+      <h1 class="text-2xl font-bold mb-6 text-center">Panel de Administración</h1>
+      <input type="email" name="email" placeholder="Correo" class="border p-3 w-full mb-4 rounded" required />
+      <input type="password" name="password" placeholder="Contraseña" class="border p-3 w-full mb-4 rounded" required />
+      {error && <p class="text-red-500 mb-4">{error}</p>}
+      <button type="submit" class="bg-blue-600 text-white font-bold py-3 w-full rounded hover:bg-blue-700 transition">Entrar</button>
+    </form>
+  </body>
+</html>
+
+<style>
+body { font-family: sans-serif; }
+</style>

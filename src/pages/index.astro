@@ -2,52 +2,117 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
-// import Categories from '../components/Categories.astro'; // <-- 1. Se elimina la importación
 import Footer from '../components/Footer.astro';
 import ProductCard from '../components/ProductCard.astro';
 import HowToBuyModal from '../components/HowToBuyModal.astro';
 import products from '../data/products.js';
 
 function shuffle(array) {
-  return array.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value);
+  return array.map(value => ({ value, sort: Math.random() }))
+              .sort((a, b) => a.sort - b.sort)
+              .map(({ value }) => value);
 }
 const featuredProducts = shuffle(products).slice(0, 6);
 ---
 
 <Layout title="Dos Patitas - Carnets de Control Sano Personalizados">
-  <Header />
-  <main>
-    <Hero />
-    {featuredProducts.length > 0 && (
-      <section class="featured-products">
-        <div class="container">
-          <div class="section-header">
-            <h2>Diseños Destacados</h2>
-            <p class="subtitle">Una selección de nuestros carnets más queridos por nuestros clientes.</p>
-          </div>
-          <div class="product-grid">
-            {featuredProducts.map(product => (
-              <ProductCard
-                imgSrc={product.images[0] || '/images/placeholder.png'}
-                title={product.name}
-                category={product.category}
-                price={product.price}
-              />
-              ))}
-            </div>
-          <div class="section-footer">
-            <a href="/catalogo" class="btn-view-all">Ver todos los diseños</a>
-          </div>
-        </div>
-      </section>
-    )}
-    {/* <Categories /> -- 2. Se elimina el componente de aquí */}
-  </main>
-  <Footer />
-  <HowToBuyModal />
+  <Header />
+
+  <main>
+    <Hero />
+
+    {featuredProducts.length > 0 && (
+      <section class="featured-products">
+        <div class="container">
+          <div class="section-header">
+            <h2>Diseños Destacados</h2>
+            <p class="subtitle">Una selección de nuestros carnets más queridos por nuestros clientes.</p>
+          </div>
+
+          <div class="product-grid">
+            {featuredProducts.map(product => (
+              <ProductCard
+                imgSrc={product.images[0] || '/images/placeholder.png'}
+                title={product.name}
+                category={product.category}
+                price={product.price || ''} 
+              />
+            ))}
+          </div>
+
+          <div class="section-footer">
+            <a href="/catalogo" class="btn-view-all">
+              Ver todos los diseños &rarr;
+            </a>
+          </div>
+        </div>
+      </section>
+    )}
+
+  </main>
+
+  <Footer />
+  <HowToBuyModal />
 </Layout>
 
 <style>
-/* Estilos completos y funcionales para el index */
-.featured-products{padding:5rem 1rem;background-color:#f9fafb}.container{max-width:1200px;margin:0 auto;padding:0 1.5rem;width:100%}.section-header{text-align:center;margin-bottom:3rem}.section-header h2{font-size:2.5rem;font-weight:800;color:#2d3748;margin:0 0 .5rem}.section-header .subtitle{font-size:1.1rem;color:#555;max-width:600px;margin:0 auto}.product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem}.section-footer{text-align:center;margin-top:3rem}.btn-view-all{display:inline-block;background-color:transparent;color:#2d3748;border:2px solid #ddd;padding:.9rem 2rem;border-radius:50px;text-decoration:none;font-weight:700;font-size:1rem;transition:all .3s ease}.btn-view-all:hover{background-color:#2d3748;color:#fff;border-color:#2d3748}@media (min-width:1536px){.container{max-width:1440px}}
+/* ==== Estilos mejorados y limpios ==== */
+.featured-products {
+  padding: 6rem 1rem;
+  background: #fef7fb;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  width: 100%;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2d3748;
+  margin: 0 0 0.5rem;
+}
+.section-header .subtitle {
+  font-size: 1.1rem;
+  color: #555;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.5rem;
+}
+
+.section-footer {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.btn-view-all {
+  display: inline-block;
+  background-color: #ffafcc;
+  color: #333;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.btn-view-all:hover {
+  background-color: #ff7bb0;
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+}
+
+@media (min-width:1536px) { .container { max-width: 1440px; } }
 </style>

@@ -1,0 +1,68 @@
+---
+import { createSignal, onMount } from 'solid-js';
+import { supabase } from '../../lib/supabaseClient';
+
+let products = [];
+const [name, setName] = createSignal('');
+const [category, setCategory] = createSignal('niños');
+let imageRefFile, imageFullFile;
+
+onMount(async () => {
+  const { data } = await supabase.from('products').select('*');
+  products = data || [];
+});
+
+async function uploadFile(file, bucket) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('bucket', bucket);
+  const res = await fetch('/api/upload', { method: 'POST', body: formData });
+  const json = await res.json();
+  return json.url;
+}
+
+async function createProduct(e) {
+  e.preventDefault();
+  const image_ref = await uploadFile(imageRefFile, 'product-images-ref');
+  const image_full = await uploadFile(imageFullFile, 'product-images-full');
+  await fetch('/api/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name(), category: category(), image_ref, image_full })
+  });
+  location.reload();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Eliminar producto?')) return;
+  await fetch('/api/products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+  location.reload();
+}
+---
+
+<div class="p-8">
+  <h1 class="text-2xl mb-4 font-bold">Panel Admin</h1>
+
+  <form class="mb-8 grid gap-4" on:submit={createProduct}>
+    <input type="text" placeholder="Nombre" bind:value={name()} required class="p-2 border rounded" />
+    <select bind:value={category()} class="p-2 border rounded">
+      <option value="niños">Niños</option>
+      <option value="niñas">Niñas</option>
+      <option value="mascotas">Mascotas</option>
+    </select>
+    <input type="file" accept="image/*" on:change={(e) => imageRefFile = e.target.files[0]} required />
+    <input type="file" accept="image/*" on:change={(e) => imageFullFile = e.target.files[0]} required />
+    <button class="bg-green-600 text-white p-2 rounded hover:bg-green-700">Agregar producto</button>
+  </form>
+
+  <ul class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {products.map(p => (
+      <li class="border p-2 rounded shadow">
+        <img src={p.image_ref} class="mb-2" />
+        <p class="font-bold">{p.name}</p>
+        <p class="text-gray-600">{p.category}</p>
+        <button class="bg-red-600 text-white p-1 rounded mt-2" onClick={() => deleteProduct(p.id)}>Eliminar</button>
+      </li>
+    ))}
+  </ul>
+</div>

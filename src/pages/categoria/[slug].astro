@@ -1,0 +1,39 @@
+---
+import products from '../../data/products.js';
+import ProductCard from '../../components/ProductCard.astro';
+
+// Obtener la categoría desde la URL
+const { slug } = Astro.params;
+
+// Mapear slug a nombre exacto de la categoría
+const categoryMap = {
+  ninas: 'niñas',
+  ninos: 'niños',
+  veterinarios: 'veterinarios'
+};
+
+const categoryName = categoryMap[slug] || '';
+const filteredProducts = products.filter(p => p.category === categoryName);
+---
+<html lang="es">
+  <head>
+    <title>Catálogo - {categoryName}</title>
+  </head>
+  <body>
+    <h1>Productos - {categoryName}</h1>
+
+    {filteredProducts.length === 0 ? (
+      <p>No hay productos en esta categoría.</p>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {filteredProducts.map(product => (
+          <ProductCard
+            imgSrc={product.images[0] || '/images/placeholder.png'}
+            title={product.name}
+            category={product.category}
+          />
+        ))}
+      </div>
+    )}
+  </body>
+</html>

@@ -1,0 +1,109 @@
+---
+import { supabase } from '../../lib/supabase';
+import { Astro } from 'astro';
+
+let message = null;
+
+// Manejo de formularios
+const data = await Astro.request.formData();
+if (Astro.request.method === 'POST') {
+  const action = data.get('action');
+
+  // Agregar nuevo producto
+  if (action === 'add') {
+    const name = data.get('name');
+    const category = data.get('category');
+    const imgRef = data.get('imgRef');
+    const imgFull = data.get('imgFull');
+
+    const fileRefName = `${Date.now()}-${imgRef.name}`;
+    const fileFullName = `${Date.now()}-${imgFull.name}`;
+
+    // Subir imagenes
+    await supabase.storage.from('product-images').upload(fileRefName, imgRef);
+    await supabase.storage.from('product-images').upload(fileFullName, imgFull);
+
+    const urlRef = `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${fileRefName}`;
+    const urlFull = `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${fileFullName}`;
+
+    const { error: insertError } = await supabase.from('products').insert([{ 
+      name, 
+      category, 
+      image_url_ref: urlRef, 
+      image_url_full: urlFull 
+    }]);
+
+    message = insertError ? 'Error al agregar producto' : 'Producto agregado correctamente 🎉';
+  }
+
+  // Eliminar producto
+  if (action === 'delete') {
+    const id = data.get('id');
+    await supabase.from('products').delete().eq('id', id);
+    message = 'Producto eliminado';
+  }
+
+  // Editar producto
+  if (action === 'edit') {
+    const id = data.get('id');
+    const name = data.get('name');
+    const category = data.get('category');
+    await supabase.from('products').update({ name, category }).eq('id', id);
+    message = 'Producto actualizado';
+  }
+}
+
+// Obtener productos
+const { data: products } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+---
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Admin | Dos Patitas</title>
+</head>
+<body class="bg-gray-100 p-8 font-sans">
+  <h1 class="text-3xl font-bold mb-6">Dashboard de Productos</h1>
+
+  {message && <p class="mb-4 p-3 bg-green-100 text-green-800 rounded">{message}</p>}
+
+  <!-- Formulario agregar producto -->
+  <form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded-xl shadow mb-8">
+    <input type="hidden" name="action" value="add" />
+    <h2 class="font-bold mb-4">Agregar nuevo producto</h2>
+    <input type="text" name="name" placeholder="Nombre" class="border p-2 mb-2 w-full rounded" required />
+    <select name="category" class="border p-2 mb-2 w-full rounded" required>
+      <option value="Niños">Niños</option>
+      <option value="Niñas">Niñas</option>
+      <option value="Mascotas">Mascotas</option>
+    </select>
+    <label class="block mb-2">Imagen de referencia</label>
+    <input type="file" name="imgRef" accept="image/*" class="mb-2" required />
+    <label class="block mb-2">Imagen cuerpo completo</label>
+    <input type="file" name="imgFull" accept="image/*" class="mb-4" required />
+    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition">Agregar producto</button>
+  </form>
+
+  <!-- Lista de productos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {products.map(p => (
+      <div class="bg-white p-4 rounded-xl shadow relative">
+        <img src={p.image_url_ref} alt={p.name} class="w-full h-48 object-cover rounded mb-2" />
+        <h3 class="font-bold">{p.name}</h3>
+        <p class="text-gray-600">{p.category}</p>
+
+        <!-- Edit / Delete -->
+        <form method="post" class="flex gap-2 mt-2">
+          <input type="hidden" name="id" value={p.id} />
+          <input type="hidden" name="action" value="delete" />
+          <button type="submit" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition">Eliminar</button>
+        </form>
+      </div>
+    ))}
+  </div>
+</body>
+</html>
+
+<style>
+body { font-family: sans-serif; }
+</style>
