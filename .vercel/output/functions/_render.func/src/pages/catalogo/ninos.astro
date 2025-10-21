@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { supabase } from '../../lib/supabaseClient';
+
+// Cargar productos específicos para "Niños"
+let products = [];
+let fetchError = null;
+
+try {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category', 'Niños') // Asegúrate de usar la misma capitalización que en Supabase
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  products = data || [];
+  console.log(`Productos de Niños cargados: ${products.length}`);
+} catch (err) {
+  console.error("Error al cargar productos de Supabase:", err);
+  fetchError = err;
+}
+
+const allCategories = [
+  { name: 'Niños', href: '/catalogo/ninos', id: 'Niños' },
+  { name: 'Niñas', href: '/catalogo/ninas', id: 'Niñas' },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', id: 'Mascotas' },
+];
+const currentCategory = 'Niños';
+---
+
+<Layout title="Catálogo - Carnets de Control Sano para Niños">
+  <main class="catalog-page">
+    <div class="container">
+      <div class="catalog-header">
+        <h1>Carnets de Control Sano para Niños</h1>
+        <p class="subtitle">Un recuerdo único y personalizado para seguir cada etapa de su crecimiento.</p>
+      </div>
+
+      <nav class="category-nav">
+        <ul>
+          {allCategories.map(cat => (
+            <li>
+              <a href={cat.href} class:list={{ active: cat.id === currentCategory }}>
+                {cat.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {fetchError ? (
+        <p class="error">
+          <strong>Error al cargar productos:</strong> {fetchError.message || 'Ocurrió un error desconocido.'}
+          <br />
+          <small>(Revisa la consola del servidor o las políticas RLS en Supabase)</small>
+        </p>
+      ) : (
+        <div class="product-grid">
+          {products.length > 0 ? (
+            products.map(product => <ProductCard product={product} />)
+          ) : (
+            <p class="no-products-message">
+              Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>
+
+<style>
+.catalog-page { padding: 4rem 0; background-color: #f9fafc; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.catalog-header { text-align: center; margin-bottom: 2.5rem; }
+h1 { font-size: 2.5rem; } .subtitle { font-size: 1.1rem; }
+.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; }
+.category-nav ul { display: flex; list-style: none; padding: 0; gap: .5rem; }
+.category-nav a { display: block; padding: .6rem 1.4rem; text-decoration: none; font-weight: 600; border-radius: 50px; border: 2px solid transparent; }
+.category-nav a.active { color: #fff; background: #007bff; border-color: #007bff; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+.no-products-message, .error { grid-column: 1 / -1; text-align: center; font-size: 1.2rem; color: #777; padding: 4rem 1rem; background-color: #fff; border-radius: 12px; border: 1px dashed #ddd; }
+.error { color: red; background-color: #ffeaea; border-color: red; }
+.error small { color: #555; display: block; margin-top: 0.5rem; font-size: 0.9rem;}
+</style>

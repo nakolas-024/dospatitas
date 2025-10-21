@@ -1,0 +1,119 @@
+---
+export interface Props {
+  product: {
+    id: string | number;
+    name: string;
+    category: string;
+    image_url_full: string; // Imagen completa del producto
+    [key: string]: any;
+  };
+}
+const { product } = Astro.props;
+
+// Seguridad
+if (!product || typeof product !== 'object') {
+  console.error("ProductFullCard recibió una prop 'product' inválida:", Astro.props);
+  return null;
+}
+---
+
+<div class="product-full-modal" id={`modal-${product.id}`}>
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
+    <button class="modal-close" aria-label="Cerrar">&times;</button>
+    <div class="modal-image">
+      <img src={product.image_url_full || '/images/placeholder.png'} alt={product.name || 'Producto'} />
+    </div>
+    <div class="modal-info">
+      <h2>{product.name}</h2>
+      <p class="category">{product.category}</p>
+      <button class="btn-add-cart">Agregar al carrito</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById(`modal-${product.id}`);
+  const closeBtn = modal.querySelector('.modal-close');
+  const overlay = modal.querySelector('.modal-overlay');
+
+  // Función de cerrar
+  const closeModal = () => modal.classList.remove('open');
+
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', closeModal);
+
+  // Abrir modal cuando se haga click en la card correspondiente
+  const productCard = document.querySelector(`.product-card[data-product*='"id":${JSON.stringify(product.id)}']`);
+  if (productCard) {
+    productCard.addEventListener('click', () => modal.classList.add('open'));
+  }
+});
+</script>
+
+<style>
+.product-full-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.product-full-modal.open {
+  display: flex;
+}
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+.modal-content {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  z-index: 10;
+  overflow: hidden;
+  text-align: center;
+  animation: fadeIn 0.25s ease;
+}
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.modal-image img {
+  width: 100%;
+  height: auto;
+}
+.modal-info {
+  padding: 1rem 2rem 2rem;
+}
+.modal-info h2 { margin: 0.5rem 0; font-size: 1.5rem; }
+.modal-info .category { color: #777; margin-bottom: 1rem; }
+.btn-add-cart {
+  background: #ffafcc;
+  color: #fff;
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-add-cart:hover {
+  background: #ff7bb0;
+  transform: scale(1.05);
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
