@@ -1,157 +1,274 @@
 ---
-export const prerender = false;
-import { supabase } from '../../lib/supabase';
+// src/pages/admin/dashboard.astro (VERSIÓN FINAL Y ÚNICA)
+export const prerender = false; // Necesario para SSR y manejo de POST
+import { supabase } from '../../lib/supabaseClient'; // Asegúrate que la ruta sea correcta
 
-let message = null;
-let filterCategory = null;
-let searchQuery = null;
+let actionMessage = null; // Para mensajes de éxito/error de acciones POST
+let initialProducts = [];
+let loadError = null; // Para errores al cargar la lista inicial
 
-// Manejo de formularios POST
+// Variables para mantener el estado de los filtros después de un POST
+let filterCategory = Astro.url.searchParams.get('category') || 'Todos';
+let searchQuery = Astro.url.searchParams.get('search') || '';
+
+// Manejo de formularios POST (Agregar, Editar, Eliminar, Filtrar)
 if (Astro.request.method === 'POST') {
-  const data = await Astro.request.formData();
-  const action = data.get('action');
-
-  if (action === 'add') {
-    const name = data.get('name');
-    const category = data.get('category');
-    const imgRef = data.get('imgRef');
-    const imgFull = data.get('imgFull');
-
-    const fileRefName = `${Date.now()}-${imgRef.name}`;
-    const fileFullName = `${Date.now()}-${imgFull.name}`;
-
-    await supabase.storage.from('product-images').upload(fileRefName, imgRef);
-    await supabase.storage.from('product-images').upload(fileFullName, imgFull);
-
-    const urlRef = `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${fileRefName}`;
-    const urlFull = `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${fileFullName}`;
-
-    const { error: insertError } = await supabase.from('products').insert([{
-      name,
-      category,
-      image_url_ref: urlRef,
-      image_url_full: urlFull
-    }]);
-
-    message = insertError ? 'Error al agregar producto' : 'Producto agregado correctamente 🎉';
-  }
-
-  if (action === 'delete') {
+  try {
+    const data = await Astro.request.formData();
+    const action = data.get('action');
     const id = data.get('id');
-    await supabase.from('products').delete().eq('id', id);
-    message = 'Producto eliminado';
-  }
 
-  if (action === 'edit') {
-    const id = data.get('id');
-    const name = data.get('name');
-    const category = data.get('category');
-    await supabase.from('products').update({ name, category }).eq('id', id);
-    message = 'Producto actualizado';
-  }
+    // --- Acción Agregar ---
+    if (action === 'add') {
+      const name = data.get('name');
+      const category = data.get('category');
+      const imgRef = data.get('imgRef'); // Objeto File
+      const imgFull = data.get('imgFull'); // Objeto File
 
-  if (action === 'filter') {
-    filterCategory = data.get('category');
-    searchQuery = data.get('search');
+      // Validar que sean archivos
+      if (!(imgRef instanceof File) || !(imgFull instanceof File)) {
+          throw new Error("Los archivos de imagen no son válidos.");
+      }
+
+      // Nombres únicos para Supabase Storage
+      const fileRefName = `${Date.now()}-${imgRef.name.replace(/\s+/g, '_')}`;
+      const fileFullName = `${Date.now()}-${imgFull.name.replace(/\s+/g, '_')}`;
+
+      // Subir archivos a Supabase Storage (Asegúrate que el bucket 'product-images' existe y tiene políticas RLS correctas)
+      const { data: uploadRefData, error: uploadRefError } = await supabase.storage
+          .from('product-images')
+          .upload(fileRefName, imgRef);
+      if (uploadRefError) throw new Error(`Error subiendo imagen ref: ${uploadRefError.message}`);
+
+      const { data: uploadFullData, error: uploadFullError } = await supabase.storage
+          .from('product-images')
+          .upload(fileFullName, imgFull);
+       if (uploadFullError) {
+           // Intenta borrar el archivo ref si el full falló
+           await supabase.storage.from('product-images').remove([fileRefName]);
+           throw new Error(`Error subiendo imagen full: ${uploadFullError.message}`);
+       }
+
+      // Obtener URLs públicas (Asegúrate que las políticas permitan lectura pública)
+      const { data: urlRefData } = supabase.storage.from('product-images').getPublicUrl(fileRefName);
+      const { data: urlFullData } = supabase.storage.from('product-images').getPublicUrl(fileFullName);
+
+      const urlRef = urlRefData?.publicUrl;
+      const urlFull = urlFullData?.publicUrl;
+
+      if (!urlRef || !urlFull) {
+        // Limpieza si no se obtuvieron URLs
+        await supabase.storage.from('product-images').remove([fileRefName, fileFullName]);
+        throw new Error("No se pudieron obtener las URLs públicas de las imágenes.");
+      }
+
+      // Insertar en la base de datos
+      const { error: insertError } = await supabase.from('products').insert([{
+        name,
+        category,
+        image_url_ref: urlRef,
+        image_url_full: urlFull
+      }]);
+      if (insertError) throw insertError;
+
+      actionMessage = 'Producto agregado correctamente 🎉';
+    }
+    // --- Acción Eliminar ---
+    else if (action === 'delete') {
+      if (!id) throw new Error("ID de producto no proporcionado para eliminar.");
+      // Opcional: Obtener URLs de imágenes para borrarlas de Storage
+      // const { data: productToDelete } = await supabase.from('products').select('image_url_ref, image_url_full').eq('id', id).single();
+      const { error: deleteError } = await supabase.from('products').delete().eq('id', id);
+      if (deleteError) throw deleteError;
+      // Opcional: Borrar archivos de Storage si se obtuvieron las URLs
+      // if (productToDelete) { await supabase.storage.from('product-images').remove([...]); }
+      actionMessage = 'Producto eliminado';
+    }
+    // --- Acción Editar ---
+    else if (action === 'edit') {
+      if (!id) throw new Error("ID de producto no proporcionado para editar.");
+      const name = data.get('name');
+      const category = data.get('category');
+      const { error: updateError } = await supabase.from('products').update({ name, category }).eq('id', id);
+      if (updateError) throw updateError;
+      actionMessage = 'Producto actualizado';
+    }
+    // --- Acción Filtrar ---
+    // (Actualiza las variables de estado para la recarga)
+    filterCategory = data.get('category') || 'Todos';
+    searchQuery = data.get('search') || '';
+
+    // Redirigir siempre después de un POST exitoso para evitar reenvío y actualizar la lista
+    const redirectUrl = `/admin/dashboard?status=success&message=${encodeURIComponent(actionMessage || 'Acción completada')}&category=${filterCategory}&search=${searchQuery}`;
+    return Astro.redirect(redirectUrl, 303); // 303 See Other
+
+  } catch (err) {
+    console.error("Error processing POST:", err);
+    actionMessage = `Error: ${err.message}`;
+    // Redirigir con mensaje de error, manteniendo filtros si es posible
+    const redirectUrl = `/admin/dashboard?status=error&message=${encodeURIComponent(actionMessage)}&category=${filterCategory}&search=${searchQuery}`;
+    return Astro.redirect(redirectUrl, 303);
   }
 }
 
-// Obtener productos
-let { data: products } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+// --- Carga GET (Carga inicial o después de redirección) ---
+try {
+  let query = supabase.from('products').select('*').order('created_at', { ascending: false });
 
-// Aplicar filtro y búsqueda
-if (filterCategory && filterCategory !== 'Todos') {
-  products = products.filter(p => p.category === filterCategory);
+  // Aplicar filtros obtenidos de la URL (después de redirección o carga inicial)
+  if (filterCategory && filterCategory !== 'Todos') {
+    query = query.eq('category', filterCategory);
+  }
+  if (searchQuery) {
+    query = query.ilike('name', `%${searchQuery}%`); // Búsqueda case-insensitive
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  initialProducts = data || [];
+  console.log(`Productos cargados: ${initialProducts.length}`); // Log para verificar
+} catch (err) {
+  console.error("Error fetching products:", err);
+  loadError = `Error al cargar productos: ${err.message}`;
 }
-if (searchQuery) {
-  products = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-}
+
+// Mensaje de estado de la URL
+const urlParams = new URLSearchParams(Astro.url.search);
+const status = urlParams.get('status');
+const messageFromRedirect = urlParams.get('message');
+const displayMessage = status ? messageFromRedirect : null; // Mostrar mensaje solo si viene de redirección
 ---
 
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>Dashboard Admin | Dos Patitas</title>
+  <style>
+    /* Tus estilos CSS aquí (los mismos que en dashboard.astro) */
+    body { margin:0; background:#f7f8fa; color:#333; font-family:sans-serif; }
+    .header { display:flex; justify-content:space-between; align-items:center; background:#ff7f50; color:white; padding:1rem 2rem; }
+    .header h1 { font-size:1.5rem; margin: 0; }
+    .user-menu { display:flex; gap:1rem; align-items:center; }
+    .logout-btn { background:white; color:#ff7f50; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; }
+    .dashboard { display:flex; min-height:calc(100vh - 64px); /* Asumiendo altura del header */}
+    .sidebar { width:220px; background:#2c3e50; color:white; padding:2rem 1rem; flex-shrink: 0; }
+    .sidebar ul { list-style:none; padding:0; margin: 0; }
+    .sidebar li { padding:0.75rem 1rem; cursor:pointer; border-radius:6px; margin-bottom:0.5rem; transition: background-color 0.2s; }
+    .sidebar li.active, .sidebar li:hover { background:#34495e; }
+    .main-content { flex:1; padding:2rem; overflow-y: auto; /* Para scroll si el contenido es largo */}
+    .message { padding:.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-weight:700; border: 1px solid transparent;}
+    .message-success { background: rgba(43,155,58,0.12); color: #155724; border-color: rgba(43,155,58,0.2); }
+    .message-error { background: rgba(232,90,90,0.08); color: #e85a5a; border-color: rgba(232,90,90,0.2); }
+    .card { background:white; padding:1.5rem; border-radius:12px; margin-bottom:2rem; box-shadow:0 4px 6px rgba(0,0,0,0.05); }
+    .card h2 { margin-top:0; margin-bottom:1rem; font-size: 1.25rem; }
+    .form label { display: block; margin-bottom: 0.25rem; font-weight: 600; font-size: 0.9rem; color: #555; }
+    .form input[type="text"], .form select, .form input[type="file"] { display:block; width:100%; margin-bottom:0.75rem; padding:0.6rem 0.75rem; border-radius:6px; border:1px solid #ccc; box-sizing: border-box; }
+    .form button { background:#ff7f50; color:white; border:none; padding:0.75rem 1.25rem; border-radius:6px; cursor:pointer; transition:background-color 0.2s; font-weight: 600; }
+    .form button:hover { background:#e76b3a; }
+    .filters { margin-bottom: 2rem; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);}
+    .filter-form { display:flex; gap:0.75rem; align-items: center; flex-wrap: wrap; }
+    .filter-form input, .filter-form select, .filter-form button { padding:0.6rem; border-radius:6px; border:1px solid #ccc; }
+    .filter-form input { flex-grow: 1; min-width: 150px; }
+    .filter-form select { min-width: 120px; }
+    .filter-form button { background:#ff7f50; color:white; border:none; cursor:pointer; font-weight: 600; }
+    .filter-form button:hover { background:#e76b3a; }
+    .product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1.5rem; }
+    .product-card { background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 6px rgba(0,0,0,0.05); transition:transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+    .product-card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.08); }
+    .product-card img { width:100%; height:180px; object-fit:cover; cursor:pointer; display: block; }
+    .product-info { padding:1rem; flex-grow: 1; display: flex; flex-direction: column; }
+    .product-info h3 { margin:0 0 0.25rem 0; font-size:1.1rem; font-weight:bold; }
+    .product-info p { color:#666; margin:0 0 1rem 0; font-size: 0.9rem; }
+    .card-actions { display:flex; gap:0.5rem; margin-top: auto; /* Empuja botones abajo */}
+    .card-actions button, .edit-btn, .card-actions form button { background:#e74c3c; color:white; padding:0.5rem 0.75rem; border-radius:6px; border:none; cursor:pointer; font-size: 0.85rem; font-weight: 600; }
+    .card-actions button:hover, .edit-btn:hover, .card-actions form button:hover { background:#c0392b; }
+    .edit-btn { background: #3498db; }
+    .edit-btn:hover { background: #2980b9; }
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; padding: 1rem; box-sizing: border-box;}
+    .modal-content { background:white; padding:2rem; border-radius:12px; width:90%; max-width:400px; position:relative; }
+    .modal .close { position:absolute; top:10px; right:15px; font-size:1.5rem; cursor:pointer; color: #888; }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content form input, .modal-content form select { display: block; width: 100%; margin-bottom: 0.75rem; padding: 0.6rem; }
+    .modal-content form button { width: 100%; padding: 0.75rem; }
+    .modal-img { max-width:90%; max-height:90%; border-radius:12px; display: block; margin: auto; }
+    #imageModal .modal-content { background: transparent; box-shadow: none; padding: 0; } /* Para que solo se vea la imagen */
+  </style>
 </head>
 <body class="font-sans">
 
-  <!-- Header -->
   <header class="header">
     <h1>Dos Patitas - Panel Admin</h1>
     <div class="user-menu">
       <span>Admin</span>
+      {/* TODO: Implementar lógica de logout */}
       <button class="logout-btn">Cerrar sesión</button>
     </div>
   </header>
 
   <div class="dashboard">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <nav>
         <ul>
           <li class="active">Productos</li>
-          <li>Pedidos</li>
-          <li>Usuarios</li>
-          <li>Ajustes</li>
+          <li>Pedidos</li> {/* Funcionalidad futura */}
+          <li>Usuarios</li>{/* Funcionalidad futura */}
+          <li>Ajustes</li> {/* Funcionalidad futura */}
         </ul>
       </nav>
     </aside>
 
-    <!-- Main content -->
     <main class="main-content">
-      {message && <p class="message">{message}</p>}
+      {/* Mensaje de estado */}
+      {displayMessage && <p class={`message ${status === 'error' ? 'message-error' : 'message-success'}`}>{displayMessage}</p>}
+      {loadError && <p class="message message-error">{loadError}</p>}
 
-      <!-- Filtros -->
-      <div class="filters">
-        <form method="post" class="filter-form">
-          <input type="hidden" name="action" value="filter" />
+      {/* Filtros */}
+      <div class="filters card">
+        <form method="get" class="filter-form"> {/* Cambiado a GET para filtros */}
+          {/* <input type="hidden" name="action" value="filter" /> -> No necesario con GET */}
           <input type="text" name="search" placeholder="Buscar producto..." value={searchQuery || ''} />
           <select name="category">
             <option value="Todos">Todos</option>
-            <option value="Niños" selected={filterCategory==='Niños'}>Niños</option>
-            <option value="Niñas" selected={filterCategory==='Niñas'}>Niñas</option>
-            <option value="Mascotas" selected={filterCategory==='Mascotas'}>Mascotas</option>
+            <option value="Niños" selected={filterCategory === 'Niños'}>Niños</option>
+            <option value="Niñas" selected={filterCategory === 'Niñas'}>Niñas</option>
+            <option value="Mascotas" selected={filterCategory === 'Mascotas'}>Mascotas</option>
           </select>
           <button type="submit">Filtrar</button>
+          {/* Botón para limpiar filtros */}
+          {(searchQuery || filterCategory !== 'Todos') && <a href="/admin/dashboard" style="padding: 0.6rem; text-decoration: none; color: #555;">Limpiar</a>}
         </form>
       </div>
 
-      <!-- Formulario agregar producto -->
+      {/* Formulario agregar producto */}
       <div class="card">
         <h2>Agregar nuevo producto</h2>
         <form method="post" enctype="multipart/form-data" class="form">
           <input type="hidden" name="action" value="add" />
-          <input type="text" name="name" placeholder="Nombre del producto" required />
-          <select name="category" required>
-            <option value="Niños">Niños</option>
-            <option value="Niñas">Niñas</option>
-            <option value="Mascotas">Mascotas</option>
-          </select>
-          <label>Imagen de referencia</label>
-          <input type="file" name="imgRef" accept="image/*" required />
-          <label>Imagen cuerpo completo</label>
-          <input type="file" name="imgFull" accept="image/*" required />
+          <div><label>Nombre</label><input type="text" name="name" placeholder="Nombre del producto" required /></div>
+          <div><label>Categoría</label><select name="category" required> <option value="Niños">Niños</option> <option value="Niñas">Niñas</option> <option value="Mascotas">Mascotas</option> </select></div>
+          <div><label>Imagen de referencia (.jpg, .png, .webp)</label><input type="file" name="imgRef" accept="image/jpeg, image/png, image/webp" required /></div>
+          <div><label>Imagen cuerpo completo (.jpg, .png, .webp)</label><input type="file" name="imgFull" accept="image/jpeg, image/png, image/webp" required /></div>
           <button type="submit">Agregar producto</button>
         </form>
       </div>
 
-      <!-- Lista de productos -->
+      {/* Lista de productos */}
+      <h2>Productos Cargados ({initialProducts.length})</h2>
       <div class="product-grid">
-        {products.map(p => (
+        {initialProducts.length === 0 && !loadError && <p>No se encontraron productos con los filtros actuales.</p>}
+        {initialProducts.map(p => (
           <div class="product-card">
-            <img src={p.image_url_ref} alt={p.name} onclick={`openImageModal('${p.image_url_full}')`} />
+            <img src={p.image_url_ref} alt={p.name} onclick={`openImageModal('${p.image_url_full}')`} title="Haz clic para ver imagen completa"/>
             <div class="product-info">
               <h3>{p.name}</h3>
               <p>{p.category}</p>
-
-              <!-- Edit / Delete -->
               <div class="card-actions">
-                <form method="post">
+                <button class="edit-btn" onclick={`openEditModal('${p.id}','${p.name}','${p.category}')`}>Editar</button>
+                <form method="post" style="margin: 0;"> {/* Estilo para quitar margen */}
                   <input type="hidden" name="id" value={p.id} />
                   <input type="hidden" name="action" value="delete" />
-                  <button type="submit">Eliminar</button>
+                  <button type="submit" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</button>
                 </form>
-                <button class="edit-btn" onclick={`openEditModal('${p.id}','${p.name}','${p.category}')`}>Editar</button>
               </div>
             </div>
           </div>
@@ -160,16 +277,18 @@ if (searchQuery) {
     </main>
   </div>
 
-  <!-- Modales -->
+  {/* Modal Editar */}
   <div id="editModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeEditModal()">&times;</span>
       <h3>Editar producto</h3>
       <form method="post" id="editForm">
         <input type="hidden" name="action" value="edit" />
-        <input type="hidden" name="id" />
-        <input type="text" name="name" placeholder="Nombre" required />
-        <select name="category" required>
+        <input type="hidden" name="id" id="edit-id"/> {/* Añadido id */}
+        <label>Nombre</label>
+        <input type="text" name="name" id="edit-name" placeholder="Nombre" required />
+        <label>Categoría</label>
+        <select name="category" id="edit-category" required>
           <option value="Niños">Niños</option>
           <option value="Niñas">Niñas</option>
           <option value="Mascotas">Mascotas</option>
@@ -179,65 +298,43 @@ if (searchQuery) {
     </div>
   </div>
 
-  <div id="imageModal" class="modal">
-    <span class="close" onclick="closeImageModal()">&times;</span>
-    <img class="modal-img" id="modalImage" />
+  {/* Modal Imagen */}
+  <div id="imageModal" class="modal" onclick="closeImageModal()"> {/* Cierra al hacer clic en fondo */}
+     <div class="modal-content"> {/* Contenedor opcional para padding/fondo si quieres */}
+       <span class="close" onclick="closeImageModal()">&times;</span>
+       <img class="modal-img" id="modalImage" alt="Imagen completa del producto"/>
+     </div>
   </div>
 
+  {/* Script para Modales */}
   <script>
+    const editModal = document.getElementById('editModal');
+    const imageModal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const editForm = document.getElementById('editForm');
+
     function openEditModal(id, name, category) {
-      const modal = document.getElementById('editModal');
-      modal.style.display = 'block';
-      const form = document.getElementById('editForm');
-      form.id.value = id;
-      form.name.value = name;
-      form.category.value = category;
+      editForm.elements['id'].value = id;
+      editForm.elements['name'].value = name;
+      editForm.elements['category'].value = category;
+      editModal.style.display = 'flex'; // Usar flex para centrar
     }
-    function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+    function closeEditModal() { editModal.style.display = 'none'; }
+
     function openImageModal(src) {
-      document.getElementById('modalImage').src = src;
-      document.getElementById('imageModal').style.display = 'flex';
+      modalImage.src = src;
+      imageModal.style.display = 'flex'; // Usar flex para centrar
     }
-    function closeImageModal() { document.getElementById('imageModal').style.display = 'none'; }
+    function closeImageModal() { imageModal.style.display = 'none'; modalImage.src=''; } // Limpiar src
+
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+            closeEditModal();
+            closeImageModal();
+        }
+    });
   </script>
 
 </body>
-
-<style>
-body { margin:0; background:#f7f8fa; color:#333; font-family:sans-serif; }
-.header { display:flex; justify-content:space-between; align-items:center; background:#ff7f50; color:white; padding:1rem 2rem; }
-.header h1 { font-size:1.5rem; }
-.user-menu { display:flex; gap:1rem; align-items:center; }
-.logout-btn { background:white; color:#ff7f50; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; }
-.dashboard { display:flex; min-height:calc(100vh - 64px); }
-.sidebar { width:220px; background:#2c3e50; color:white; padding:2rem 1rem; }
-.sidebar ul { list-style:none; padding:0; }
-.sidebar li { padding:0.75rem 1rem; cursor:pointer; border-radius:6px; margin-bottom:0.5rem; }
-.sidebar li.active, .sidebar li:hover { background:#34495e; }
-.main-content { flex:1; padding:2rem; }
-.message { background:#d4edda; color:#155724; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
-.card { background:white; padding:1.5rem; border-radius:12px; margin-bottom:2rem; box-shadow:0 4px 6px rgba(0,0,0,0.05); }
-.card h2 { margin-top:0; margin-bottom:1rem; }
-.form input[type="text"], .form select, .form input[type="file"] { display:block; width:100%; margin-bottom:0.75rem; padding:0.5rem; border-radius:6px; border:1px solid #ccc; }
-.form button { background:#ff7f50; color:white; border:none; padding:0.75rem 1rem; border-radius:6px; cursor:pointer; transition:0.2s; }
-.form button:hover { background:#e76b3a; }
-.filters { margin-bottom:1rem; }
-.filter-form { display:flex; gap:0.5rem; }
-.filter-form input, .filter-form select, .filter-form button { padding:0.5rem; border-radius:6px; border:1px solid #ccc; }
-.filter-form button { background:#ff7f50; color:white; border:none; cursor:pointer; }
-.filter-form button:hover { background:#e76b3a; }
-.product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1.5rem; }
-.product-card { background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 6px rgba(0,0,0,0.05); transition:0.2s; }
-.product-card:hover { transform:translateY(-3px); }
-.product-card img { width:100%; height:180px; object-fit:cover; cursor:pointer; }
-.product-info { padding:1rem; }
-.product-info h3 { margin:0; font-size:1.1rem; font-weight:bold; }
-.product-info p { color:#666; margin:0.25rem 0 0.5rem 0; }
-.card-actions { display:flex; gap:0.5rem; margin-top:0.5rem; }
-.card-actions button, .edit-btn { background:#e74c3c; color:white; padding:0.5rem 0.75rem; border-radius:6px; border:none; cursor:pointer; }
-.card-actions button:hover, .edit-btn:hover { background:#c0392b; }
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:100; }
-.modal-content { background:white; padding:2rem; border-radius:12px; width:90%; max-width:400px; position:relative; }
-.modal .close { position:absolute; top:10px; right:15px; font-size:1.5rem; cursor:pointer; }
-.modal-img { max-width:90%; max-height:90%; border-radius:12px; }
-</style>
+</html>

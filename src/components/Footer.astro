@@ -1,6 +1,8 @@
 ---
+// src/components/Footer.astro (Revisado y Correcto)
 import Icon from './Icon.astro';
 
+// Datos de enlaces (asegúrate que los iconos mdi: estén disponibles si usas iconify)
 const socialLinks = [
   { href: 'https://www.instagram.com/TUPERFILDEINSTAGRAM', label: 'Instagram', icon: 'mdi:instagram' },
   { href: 'https://www.facebook.com/TUPAGINADEFACEBOOK', label: 'Facebook', icon: 'mdi:facebook' },
@@ -8,22 +10,16 @@ const socialLinks = [
 ];
 
 const linkColumns = [
-  {
-    title: 'Tienda',
-    links: [
+  { title: 'Tienda', links: [
       { href: '/catalogo/ninos', text: 'Niños' },
       { href: '/catalogo/ninas', text: 'Niñas' },
       { href: '/catalogo/veterinarios', text: 'Mascotas' },
-    ]
-  },
-  {
-    title: 'Ayuda',
-    links: [
-      { href: '#', text: 'Cómo Comprar', modal: 'how-to-buy-modal'},
+  ]},
+  { title: 'Ayuda', links: [
+      { href: '#', text: 'Cómo Comprar', modal: 'how-to-buy-modal'}, // Necesita que HowToBuyModal detecte 'data-open-modal'
       { href: '/preguntas-frecuentes', text: 'Preguntas Frecuentes' },
       { href: '/contacto', text: 'Contacto' },
-    ]
-  }
+  ]}
 ];
 
 const currentYear = new Date().getFullYear();
@@ -33,7 +29,7 @@ const currentYear = new Date().getFullYear();
   <div class="footer-content container">
     <div class="footer-brand">
       <a href="/" class="logo">
-        <img src="/images/dospatitas-logo-blanco.png" alt="Dos Patitas Logo">
+        <img src="/images/dospatitas-logo-blanco.png" alt="Dos Patitas Logo Blanco">
       </a>
       <p class="tagline">Recuerdos personalizados para cada etapa de la vida.</p>
     </div>
@@ -54,8 +50,6 @@ const currentYear = new Date().getFullYear();
     <div class="copyright">
       <p>&copy; {currentYear} Dos Patitas. Todos los derechos reservados.</p>
       <p class="made-with-love">Hecho con ❤️</p>
-
-      <!-- 🔐 Enlace Admin -->
       <a href="/admin/login" class="admin-access">Acceso administrador</a>
     </div>
 
@@ -71,10 +65,11 @@ const currentYear = new Date().getFullYear();
 
 <style>
 .site-footer {
-  background-color: var(--color-primary);
+  /* Asegúrate que --color-primary esté definido globalmente y sea oscuro */
+  background-color: var(--color-primary, #333); /* Añadido color por defecto por si falla la variable */
   color: #fff;
   padding: 3rem 0 0;
-  margin-top: 4rem;
+  margin-top: 4rem; /* Separación del contenido superior */
   font-size: .95rem;
 }
 
@@ -86,7 +81,7 @@ const currentYear = new Date().getFullYear();
 
 .footer-content {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr; /* Logo ocupa más espacio */
   gap: 2rem;
   padding-bottom: 2rem;
 }
@@ -99,14 +94,16 @@ const currentYear = new Date().getFullYear();
 .footer-brand .tagline {
   color: rgba(255,255,255,.9);
   max-width: 250px;
+  line-height: 1.5;
 }
 
 .footer-links h4 {
-  font-size: 1.1rem;
+  font-size: 1rem; /* Ligeramente más pequeño */
   font-weight: 700;
   margin-bottom: 1rem;
   text-transform: uppercase;
   letter-spacing: .5px;
+  color: #fff; /* Asegurar color blanco */
 }
 
 .footer-links ul {
@@ -120,7 +117,7 @@ const currentYear = new Date().getFullYear();
 }
 
 .footer-links a {
-  color: rgba(255,255,255,.9);
+  color: rgba(255,255,255,.85); /* Ligeramente menos transparente */
   text-decoration: none;
   transition: color .2s ease;
 }
@@ -134,37 +131,42 @@ const currentYear = new Date().getFullYear();
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: 1.5rem 0; /* Quitado padding lateral para que use el del container */
+  margin: 0 1.5rem; /* Añadido margen para alinear con container */
   border-top: 1px solid rgba(255,255,255,.2);
 }
 
 .copyright p {
-  margin: 0;
+  margin: 0 0 0.5rem; /* Espacio entre líneas */
   color: rgba(255,255,255,.8);
   font-size: .9rem;
 }
+.copyright p:last-child {
+    margin-bottom: 0;
+}
+
 
 .copyright .made-with-love {
   font-size: .85rem;
   margin-bottom: 0.8rem;
 }
 
-/* 🔐 Botón admin */
 .admin-access {
-  display: inline-block;
+  display: inline-block; /* Era inline-block */
+  margin-top: 1rem; /* Separación */
   background-color: transparent;
   color: rgba(255,255,255,.9);
   border: 1px solid rgba(255,255,255,.4);
-  padding: 0.6rem 1.2rem;
+  padding: 0.5rem 1rem; /* Ligeramente más pequeño */
   border-radius: 50px;
-  font-size: .9rem;
+  font-size: .85rem; /* Ligeramente más pequeño */
   text-decoration: none;
   transition: all .3s ease;
 }
 
 .admin-access:hover {
   background-color: #fff;
-  color: var(--color-primary);
+  color: var(--color-primary, #333); /* Usar variable o fallback */
   border-color: #fff;
 }
 
@@ -175,31 +177,43 @@ const currentYear = new Date().getFullYear();
 
 .social-links a {
   color: #fff;
-  transition: transform .2s ease;
+  transition: transform .2s ease, color 0.2s ease; /* Añadido color a la transición */
 }
 
 .social-links a:hover {
   transform: scale(1.2);
+  color: rgba(255, 255, 255, 0.7); /* Efecto hover sutil */
 }
 
 @media (max-width: 768px) {
+  .site-footer {
+      padding-top: 2rem; /* Menos padding en móvil */
+  }
   .footer-content {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Una sola columna */
     text-align: center;
+    gap: 2.5rem; /* Mayor separación vertical */
   }
   .footer-brand .tagline {
-    margin: 0 auto;
+    margin: 0 auto 1rem; /* Centrado y con margen inferior */
+    max-width: 90%;
   }
   .footer-bottom {
     flex-direction: column;
     gap: 1.5rem;
+    text-align: center;
+    margin: 0 1rem; /* Menos margen lateral en móvil */
+    padding: 1.5rem 0;
   }
   .copyright {
-    text-align: center;
-    order: 2;
+    order: 2; /* Copyright abajo */
   }
   .social-links {
-    order: 1;
+    order: 1; /* Redes sociales arriba */
+    justify-content: center; /* Centrar iconos */
+  }
+  .admin-access {
+      margin-top: 1.5rem; /* Mayor separación */
   }
 }
 </style>

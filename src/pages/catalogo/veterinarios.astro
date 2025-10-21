@@ -1,54 +1,100 @@
 ---
-import ProductCardFull from "@/components/ProductCardFull.astro";
-import supabase from "@/lib/supabaseClient";
+// src/pages/catalogo/veterinarios.astro (CON MEJOR REPORTE DE ERRORES)
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { supabase } from '../../lib/supabaseClient'; // Asegúrate que esta ruta es correcta
 
-const { data: products, error } = await supabase
-  .from("productos")
-  .select("*")
-  .eq("categoria", "veterinarios");
+// Cargar productos específicos para "Mascotas"
+let products = [];
+let fetchError = null; // Usaremos una variable separada para el error
 
-if (error) {
-  console.error("Error cargando productos:", error.message);
+try {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category', 'Mascotas') // Confirma que 'Mascotas' es exacto (mayúsculas/minúsculas)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw error; // Lanzar el error para capturarlo abajo
+  }
+  products = data || []; // Asignar datos o un array vacío
+  console.log(`Productos de Mascotas cargados: ${products.length}`); // Log para verificar en consola del servidor
+
+} catch (err) {
+  console.error("Error al cargar productos de Supabase:", err);
+  fetchError = err; // Guardar el error para mostrarlo
 }
+
+// Definir categorías para la navegación
+const allCategories = [
+  { name: 'Niños', href: '/catalogo/ninos', id: 'Niños' },
+  { name: 'Niñas', href: '/catalogo/ninas', id: 'Niñas' },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', id: 'Mascotas' },
+];
+const currentCategory = 'Mascotas';
 ---
 
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veterinarios | Molly Inc</title>
-  </head>
-  <body class="bg-gray-50 text-gray-800">
-    <section class="max-w-6xl mx-auto px-4 py-10">
-      <h1 class="text-3xl font-bold text-center mb-10">Veterinarios</h1>
+<Layout title="Catálogo - Carnets de Control para Mascotas">
+  <main class="catalog-page">
+    <div class="container">
+      <div class="catalog-header">
+        <h1>Carnets de Control para Mascotas</h1>
+        <p class="subtitle">Lleva un registro de vacunas y visitas de tu mejor amigo.</p>
+      </div>
 
-      {error ? (
-        <p class="text-center text-red-500">
-          Error al cargar productos: {error.message}
-        </p>
-      ) : products && products.length > 0 ? (
-        <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCardFull product={product} />
+      {/* Navegación de Categorías */}
+      <nav class="category-nav">
+        <ul>
+          {allCategories.map(cat => (
+            <li>
+              <a href={cat.href} class:list={{ active: cat.id === currentCategory }}>
+                {cat.name}
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
+      </nav>
+
+      {/* Productos */}
+      {fetchError ? (
+        // Mostrar mensaje de error detallado
+        <p class="error">
+          <strong>Error al cargar productos:</strong> {fetchError.message || 'Ocurrió un error desconocido.'}
+          <br />
+          <small>(Revisa la consola del servidor para más detalles y verifica las políticas RLS en Supabase)</small>
+        </p>
       ) : (
-        <p class="text-center text-gray-500">No hay productos disponibles.</p>
+        <div class="product-grid">
+          {products.length > 0 ? (
+            products.map(product => (
+              <ProductCard product={product} />
+            ))
+          ) : (
+            <p class="no-products-message">
+              Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
+            </p>
+          )}
+        </div>
       )}
-    </section>
-  </body>
-</html>
+    </div>
+  </main>
+</Layout>
+
+{/* Sin script local */}
 
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-  }
-
-  h1 {
-    color: #222;
-  }
-
-  .grid {
-    display: grid;
-  }
+/* Estilos sin cambios */
+.catalog-page { padding: 4rem 0; background-color: #fef7fb; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.catalog-header { text-align: center; margin-bottom: 2.5rem; }
+h1 { font-size: 2.5rem; } .subtitle { font-size: 1.1rem; }
+.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; }
+.category-nav ul { display: flex; list-style: none; padding: 0; gap: .5rem; }
+.category-nav a { display: block; padding: .6rem 1.4rem; text-decoration: none; font-weight: 600; border-radius: 50px; border: 2px solid transparent; }
+.category-nav a.active { color: #fff; background: #f0ce0c; border-color: #f0ce0c; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+.no-products-message, .error { grid-column: 1 / -1; text-align: center; font-size: 1.2rem; color: #777; padding: 4rem 1rem; background-color: #fff; border-radius: 12px; border: 1px dashed #ddd; }
+.error { color: red; background-color: #ffeaea; border-color: red; }
+.error small { color: #555; display: block; margin-top: 0.5rem; font-size: 0.9rem;}
 </style>

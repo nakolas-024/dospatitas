@@ -1,0 +1,104 @@
+---
+import Icon from './Icon.astro';
+---
+
+<div id="cart-button" class="cart-button" title="Ver carrito">
+  <Icon name="shopping-cart" size={28} />
+  <span id="cart-counter" class="cart-counter hidden">0</span>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cartButton = document.getElementById('cart-button');
+  const cartCounter = document.getElementById('cart-counter');
+
+  const updateCounter = () => {
+    let cart = [];
+    try {
+      cart = JSON.parse(localStorage.getItem('cart')) || [];
+    } catch (e) {
+      console.error("Error al parsear el carrito:", e);
+    }
+
+    if (!Array.isArray(cart)) cart = [];
+
+    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    if (totalItems > 0) {
+      cartCounter.textContent = totalItems;
+      cartCounter.classList.remove('hidden');
+    } else {
+      cartCounter.classList.add('hidden');
+    }
+  };
+
+  // Abrir panel de carrito
+  cartButton.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('openCartPanel'));
+  });
+
+  // Escuchar actualizaciones
+  document.addEventListener('cartUpdated', updateCounter);
+  updateCounter();
+});
+</script>
+
+<style>
+.cart-button {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  background-color: #ffafcc; /* color coherente con Dos Patitas */
+  color: #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.cart-button:hover {
+  background-color: #ff7bb0;
+  color: white;
+  transform: translateY(-4px) scale(1.07);
+}
+
+/* Contador del carrito */
+.cart-counter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #fdd835;
+  color: #333;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.cart-counter.hidden {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .cart-button {
+    width: 55px;
+    height: 55px;
+  }
+  .cart-counter {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+}
+</style>

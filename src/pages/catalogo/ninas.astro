@@ -1,24 +1,36 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
 import ProductCard from '../../components/ProductCard.astro';
-import products from '../../data/products.js';
+import { supabase } from '../../lib/supabaseClient';
 
-// Filtramos los productos de la categoría "niñas"
-const productsNinas = products.filter(p => p.category === "niñas");
+// Cargar productos específicos para "Niñas"
+let products = [];
+let fetchError = null;
 
-// Menú de navegación con la categoría activa
-const categories = [
-  { name: 'Niños', href: '/catalogo/ninos', active: false },
-  { name: 'Niñas', href: '/catalogo/ninas', active: true },
-  { name: 'Mascotas', href: '/catalogo/veterinarios', active: false },
+try {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category', 'Niñas')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  products = data || [];
+  console.log(`Productos de Niñas cargados: ${products.length}`);
+} catch (err) {
+  console.error("Error al cargar productos de Supabase:", err);
+  fetchError = err;
+}
+
+const allCategories = [
+  { name: 'Niños', href: '/catalogo/ninos', id: 'Niños' },
+  { name: 'Niñas', href: '/catalogo/ninas', id: 'Niñas' },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', id: 'Mascotas' },
 ];
+const currentCategory = 'Niñas';
 ---
 
 <Layout title="Catálogo - Carnets de Control Sano para Niñas">
-  <Header />
-
   <main class="catalog-page">
     <div class="container">
       <div class="catalog-header">
@@ -28,9 +40,9 @@ const categories = [
 
       <nav class="category-nav">
         <ul>
-          {categories.map(cat => (
+          {allCategories.map(cat => (
             <li>
-              <a href={cat.href} class:list={{ active: cat.active }}>
+              <a href={cat.href} class:list={{ active: cat.id === currentCategory }}>
                 {cat.name}
               </a>
             </li>
@@ -38,40 +50,38 @@ const categories = [
         </ul>
       </nav>
 
-      <div class="product-grid">
-        {productsNinas.length > 0 ? (
-          productsNinas.map(p => (
-            <ProductCard
-              imgSrc={p.images?.[0] || '/images/placeholder.png'}
-              title={p.name}
-              category={p.category}
-              price=""
-            />
-          ))
-        ) : (
-          <p class="no-products-message">
-            Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
-          </p>
-        )}
-      </div>
+      {fetchError ? (
+        <p class="error">
+          <strong>Error al cargar productos:</strong> {fetchError.message || 'Ocurrió un error desconocido.'}
+          <br />
+          <small>(Revisa la consola del servidor o las políticas RLS en Supabase)</small>
+        </p>
+      ) : (
+        <div class="product-grid">
+          {products.length > 0 ? (
+            products.map(product => <ProductCard product={product} />)
+          ) : (
+            <p class="no-products-message">
+              Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
+            </p>
+          )}
+        </div>
+      )}
     </div>
   </main>
-
-  <Footer />
 </Layout>
 
 <style>
-.catalog-page { background-color: #f9f9f9; }
-.container { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem; }
-@media (min-width: 1536px) { .container { max-width: 1440px; } }
+.catalog-page { padding: 4rem 0; background-color: #fef7fb; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
 .catalog-header { text-align: center; margin-bottom: 2.5rem; }
-.catalog-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #333; font-weight: 800; }
-.catalog-header .subtitle { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
-.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; border-bottom: 1px solid #e0e0e0; }
-.category-nav ul { display: flex; list-style: none; padding: 0; margin: 0; }
-.category-nav a { display: block; padding: 0.75rem 1.5rem; margin: 0 0.5rem; color: #555; text-decoration: none; font-weight: 600; border-bottom: 3px solid transparent; transition: all 0.2s ease-in-out; }
-.category-nav a:hover { color: #007bff; }
-.category-nav a.active { color: #007bff; border-bottom-color: #007bff; }
+h1 { font-size: 2.5rem; } .subtitle { font-size: 1.1rem; }
+.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; }
+.category-nav ul { display: flex; list-style: none; padding: 0; gap: .5rem; }
+.category-nav a { display: block; padding: .6rem 1.4rem; text-decoration: none; font-weight: 600; border-radius: 50px; border: 2px solid transparent; }
+.category-nav a.active { color: #fff; background: #e83e8c; border-color: #e83e8c; }
 .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-.no-products-message { grid-column: 1 / -1; text-align: center; font-size: 1.2rem; color: #777; padding: 4rem 1rem; background-color: #fff; border-radius: 8px; border: 1px dashed #ddd; }
+.no-products-message, .error { grid-column: 1 / -1; text-align: center; font-size: 1.2rem; color: #777; padding: 4rem 1rem; background-color: #fff; border-radius: 12px; border: 1px dashed #ddd; }
+.error { color: red; background-color: #ffeaea; border-color: red; }
+.error small { color: #555; display: block; margin-top: 0.5rem; font-size: 0.9rem;}
 </style>

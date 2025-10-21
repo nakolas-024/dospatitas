@@ -1,0 +1,28 @@
+---
+// src/components/CatalogPage.astro (SIN SCRIPT)
+import Layout from '../layouts/Layout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import ProductCard from './ProductCard.astro';
+import ProductModal from './ProductModal.astro';
+import { supabase } from '../lib/supabaseClient';
+
+export interface Props { /* ... */ }
+const { category, title, subtitle } = Astro.props;
+const { data: products, error } = await supabase.from('products').select('*').eq('category', category);
+// ... resto del frontmatter
+---
+<Layout title={title}>
+  <main class="catalog-page">
+    <div class="container">
+      <h1>{title}</h1>
+      <div class="product-grid">
+        {products && products.map(product => <ProductCard product={product} />)}
+      </div>
+    </div>
+  </main>
+  <ProductModal />
+</Layout>
+<style>
+/* Tus estilos aquí */
+</style>

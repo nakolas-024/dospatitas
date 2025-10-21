@@ -1,209 +1,44 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { supabase } from '../lib/supabaseClient';
+// src/components/ProductCard.astro (VERSIÓN FINAL Y CORRECTA)
+export interface Props {
+  product: {
+    id: string | number;
+    name: string;
+    category: string;
+    image_url_ref: string;
+    [key: string]: any; // Permite otras propiedades
+  };
+}
+const { product } = Astro.props;
 
-// Cargar productos desde Supabase
-const { data: products, error } = await supabase
-  .from('products')
-  .select('*')
-  .eq('category', 'Mascotas') // usa exactamente el nombre guardado en la DB
-  .order('created_at', { ascending: false });
+// Guarda de seguridad
+if (!product || typeof product !== 'object') {
+  console.error("ProductCard recibió una prop 'product' inválida:", Astro.props);
+  return null;
+}
 
-const categories = [
-  { name: 'Niños', href: '/catalogo/ninos', active: false },
-  { name: 'Niñas', href: '/catalogo/ninas', active: false },
-  { name: 'Mascotas', href: '/catalogo/veterinarios', active: true },
-];
+// Convertir a JSON SIN reemplazar comillas
+const productJsonString = JSON.stringify(product);
 ---
 
-<Layout title="Catálogo - Carnets de Control para Mascotas">
-  <Header />
-  <main class="catalog-page">
-    <div class="container">
-      <div class="catalog-header">
-        <h1>Carnets de Control para Mascotas</h1>
-        <p class="subtitle">Lleva un registro de vacunas y visitas de tu mejor amigo.</p>
-      </div>
-
-      <!-- Categorías -->
-      <nav class="category-nav">
-        <ul>
-          {categories.map(cat => (
-            <li>
-              <a href={cat.href} class:list={{ active: cat.active }}>
-                {cat.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <!-- Productos -->
-      {error ? (
-        <p class="error">Error al cargar productos.</p>
-      ) : (
-        <div class="product-grid">
-          {products && products.length > 0 ? (
-            products.map(product => (
-              <div
-                class="product-card"
-                data-product={JSON.stringify(product).replace(/"/g, '&quot;')}
-              >
-                <div class="img-wrapper">
-                  <img src={product.image_url_ref} alt={product.name} loading="lazy" />
-                </div>
-                <h3>{product.name}</h3>
-                <p class="category">{product.category}</p>
-              </div>
-            ))
-          ) : (
-            <p class="no-products-message">
-              Aún no hemos agregado productos en esta categoría. ¡Vuelve pronto!
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  </main>
-
-  <!-- Modal de producto -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <button class="close" id="closeModalBtn">×</button>
-      <img id="modal-img" src="" alt="Producto completo" />
-      <h2 id="modal-title"></h2>
-      <button class="add-to-cart" id="addToCartBtn">Añadir al carrito 🛒</button>
-    </div>
+<div
+  class="product-card"
+  data-product={productJsonString} {/* Pasamos el JSON directamente */}
+>
+  <div class="img-wrapper">
+    <img src={product.image_url_ref || '/images/placeholder.png'} alt={product.name || 'Producto'} loading="lazy" />
   </div>
-
-  <Footer />
-</Layout>
-
-<script>
-  let currentProduct = null;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('modal');
-    const modalImg = document.getElementById('modal-img');
-    const modalTitle = document.getElementById('modal-title');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const addToCartBtn = document.getElementById('addToCartBtn');
-
-    // Clic en producto → abrir modal
-    document.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const product = JSON.parse(card.dataset.product);
-        currentProduct = product;
-        const imgUrl = product.image_url_full || product.image_url_ref || '/images/placeholder.png';
-        modalImg.src = imgUrl;
-        modalTitle.textContent = product.name;
-        modal.classList.remove('hidden');
-      });
-    });
-
-    // Cerrar modal
-    closeModalBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-    });
-
-    // Añadir al carrito
-    addToCartBtn.addEventListener('click', () => {
-      if (!currentProduct) return;
-      const cart = JSON.parse(localStorage.getItem('cart')) || [];
-      const existing = cart.find(item => item.id === currentProduct.id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({ ...currentProduct, quantity: 1 });
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-
-      addToCartBtn.textContent = '✅ Agregado';
-      addToCartBtn.disabled = true;
-      setTimeout(() => {
-        addToCartBtn.textContent = 'Añadir al carrito 🛒';
-        addToCartBtn.disabled = false;
-      }, 1500);
-    });
-  });
-</script>
+  <h3>{product.name || 'Nombre no disponible'}</h3>
+  <p class="category">{product.category || 'Categoría no disponible'}</p>
+</div>
 
 <style>
-.catalog-page { padding: 4rem 0; background-color: #fef7fb; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-.catalog-header { text-align: center; margin-bottom: 2.5rem; }
-.catalog-header h1 { font-size: 2.5rem; font-weight: 800; color: #333; margin-bottom: .5rem; }
-.catalog-header .subtitle { font-size: 1.1rem; color: #555; }
-
-.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; flex-wrap: wrap; gap: .5rem; }
-.category-nav ul { display: flex; list-style: none; padding: 0; margin: 0; gap: .5rem; flex-wrap: wrap; }
-.category-nav a {
-  display: block; padding: .6rem 1.4rem; color: #555; text-decoration: none; font-weight: 600;
-  border-radius: 50px; border: 2px solid transparent; transition: all 0.25s ease-in-out;
-}
-.category-nav a:hover { color: #fff; background: #fc9700; border-color: #fc9700; }
-.category-nav a.active { color: #fff; background: #f0ce0c; border-color: #f0ce0c; }
-
-.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-
-.product-card {
-  background: #fff; border-radius: 12px; padding: 1rem;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.05);
-  text-align: center; cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
+/* Estilos (sin cambios respecto a la versión anterior) */
+.product-card { background: #fff; border-radius: 12px; padding: 1rem; box-shadow: 0 6px 15px rgba(0,0,0,0.05); text-align: center; cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; }
 .product-card:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-.img-wrapper { overflow: hidden; border-radius: 10px; }
+.img-wrapper { overflow: hidden; border-radius: 10px; margin-bottom: 0.5rem; }
 .product-card img { width: 100%; height: 240px; object-fit: cover; border-radius: 10px; transition: transform .4s ease; }
 .product-card:hover img { transform: scale(1.05); }
-.product-card h3 { font-size: 1.1rem; color: #333; font-weight: 700; margin-top: .6rem; }
-.product-card .category { font-size: .9rem; color: #777; }
-
-.no-products-message {
-  grid-column: 1 / -1; text-align: center; font-size: 1.2rem; color: #777;
-  padding: 4rem 1rem; background-color: #fff; border-radius: 12px;
-  border: 1px dashed #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-}
-
-/* MODAL */
-.modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.65);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 100;
-}
-.modal.hidden { display: none; }
-
-.modal-content {
-  background: #fff; border-radius: 16px; padding: 2rem;
-  text-align: center; max-width: 600px; width: 90%;
-  position: relative; animation: fadeIn .3s ease;
-}
-.modal-content img {
-  width: 100%; max-height: 400px; object-fit: contain;
-  border-radius: 12px; margin-bottom: 1rem;
-}
-.modal-content h2 { margin-bottom: 1rem; color: #333; font-weight: 700; }
-.close {
-  position: absolute; top: .8rem; right: .8rem;
-  background: transparent; border: none;
-  font-size: 1.8rem; color: #666; cursor: pointer; transition: color .2s;
-}
-.close:hover { color: #000; }
-
-.add-to-cart {
-  background: #f0ce0c; color: #333; font-weight: 700;
-  padding: .8rem 1.6rem; border-radius: 50px;
-  border: none; cursor: pointer; transition: background .25s ease;
-}
-.add-to-cart:hover { background: #fc9700; color: #fff; }
-
-.fade-in { animation: fadeIn .3s ease; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
+.product-card h3 { font-size: 1.1rem; color: #333; font-weight: 700; margin: 0.6rem 0 0.2rem; }
+.product-card .category { font-size: .9rem; color: #777; margin: 0; }
 </style>

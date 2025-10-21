@@ -1,134 +1,164 @@
 ---
-// Layout principal
-import Cart from '../components/Cart.astro';
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import HowToBuyModal from "../components/HowToBuyModal.astro";
+import CartButton from "../components/CartButton.astro";
+import Cart from "../components/Cart.astro";
+import ProductModal from "../components/ProductModal.astro";
 
 interface Props {
   title: string;
 }
-
 const { title } = Astro.props;
 const siteName = "Dos Patitas";
 const fullTitle = `${title} | ${siteName}`;
-const description = "Diseñamos carnets de control sano únicos y personalizados para niños, niñas y mascotas. Un recuerdo que atesorarás para siempre.";
-const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+const description = "Diseñamos carnets de control sano únicos y personalizados.";
+const currentUrl = Astro.url.href;
 ---
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={currentUrl} />
+    <meta name="generator" content={Astro.generator} />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/images/social-preview.png" />
-    <meta property="og:url" content={currentUrl} />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={fullTitle} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content="/images/social-preview.png" />
-
-    <meta name="theme-color" content="#f57c00" />
-
+    <!-- Fuente -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
 
   <body>
+    <Header />
     <slot />
+    <Footer />
 
+    <!-- Modales y componentes -->
+    <HowToBuyModal />
+    <ProductModal />
+    <CartButton />
     <Cart />
 
-    <script is:inline>
-      document.addEventListener('click', (e) => {
-        // --- Modal universal "Cómo Comprar" ---
-        const openBtn = e.target.closest('[data-open-modal]');
-        if(openBtn){
-          const modalId = openBtn.dataset.openModal;
-          const modal = modalId ? document.getElementById(modalId) : null;
-          if(modal){
-            e.preventDefault();
-            modal.classList.remove('hidden');
-          }
-        }
+    <!-- BOTONES FLOTANTES -->
+    <a
+      href="https://wa.me/+56966306409"
+      class="floating-btn whatsapp-btn"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Contactar por WhatsApp"
+    >
+      💬
+    </a>
 
-        // --- Cerrar modal ---
-        if(e.target.matches('[data-close-modal]') || e.target.classList.contains('modal')){
-          const modal = e.target.closest('.modal');
-          modal?.classList.add('hidden');
+    <button id="open-cart" class="floating-btn cart-btn" aria-label="Ver carrito">
+      🛒
+    </button>
+
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", () => {
+        const cartPanel = document.getElementById("cart-panel");
+        const openCart = document.getElementById("open-cart");
+        if (cartPanel && openCart) {
+          openCart.addEventListener("click", () => {
+            cartPanel.classList.add("is-open");
+          });
         }
       });
-
-      // --- Header scroll effect ---
-      const header = document.getElementById('site-header');
-      if(header){
-        window.addEventListener('scroll', () => {
-          header.classList.toggle('scrolled', window.scrollY > 10);
-        });
-      }
-
-      // --- Mobile menu toggle ---
-      const hamburgerBtn = document.getElementById('hamburger-menu');
-      const closeMenuBtn = document.getElementById('close-menu');
-      const mobileMenuPanel = document.getElementById('mobile-menu-panel');
-
-      if(hamburgerBtn && closeMenuBtn && mobileMenuPanel){
-        hamburgerBtn.addEventListener('click', () => {
-          mobileMenuPanel.classList.add('is-open');
-          hamburgerBtn.setAttribute('aria-expanded', 'true');
-          mobileMenuPanel.setAttribute('aria-hidden', 'false');
-        });
-
-        closeMenuBtn.addEventListener('click', () => {
-          mobileMenuPanel.classList.remove('is-open');
-          hamburgerBtn.setAttribute('aria-expanded', 'false');
-          mobileMenuPanel.setAttribute('aria-hidden', 'true');
-        });
-      }
     </script>
 
     <style is:global>
-      html { box-sizing: border-box; scroll-behavior: smooth; }
-      *, *:before, *:after { box-sizing: inherit; }
-
       :root {
-        --color-primary: #f57c00;
-        --color-primary-dark: #d87100;
-        --color-secondary: #76d497;
-        --color-text-dark: #2d3748;
-        --color-text-light: #555;
-        --color-background: #ffffff;
-        --color-background-alt: #f9fafb;
-        --font-primary: 'Poppins', sans-serif;
+        --color-primary: #ff7bb0;
+        --color-accent: #ffafcc;
+        --color-bg: #fff;
+        --color-text: #333;
+        --font-main: 'Poppins', sans-serif;
+      }
 
-        /* Tamaños de fuente */
-        --font-size-base: 1rem;
-        --font-size-lg: 1.125rem;
-        --font-size-xl: 1.25rem;
+      * {
+        box-sizing: border-box;
       }
 
       body {
-        font-family: var(--font-primary);
         margin: 0;
-        color: var(--color-text-dark);
-        background-color: var(--color-background);
+        font-family: var(--font-main);
+        color: var(--color-text);
+        background-color: var(--color-bg);
+        line-height: 1.5;
       }
 
-      /* Header scroll */
-      header.scrolled { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+      /* ======= HEADER ======= */
+      header {
+        background-color: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
 
-      /* Smooth dropdown transitions */
-      .dropdown-menu, .mobile-menu-panel { transition: all 0.3s ease-in-out; }
+      /* ======= FOOTER ======= */
+      footer {
+        background: #fff0f6;
+        padding: 2rem 1rem;
+        text-align: center;
+        border-top: 1px solid #ffd1e8;
+        color: #444;
+        font-size: 0.9rem;
+      }
+
+      /* ======= BOTONES FLOTANTES ======= */
+      .floating-btn {
+        position: fixed;
+        bottom: 25px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        z-index: 100;
+      }
+
+      .floating-btn:hover {
+        transform: translateY(-4px) scale(1.07);
+      }
+
+      /* WhatsApp: esquina inferior izquierda */
+      .whatsapp-btn {
+        left: 25px;
+        background-color: #25d366;
+      }
+      .whatsapp-btn:hover {
+        background-color: #1ebe5c;
+      }
+
+      /* Carrito: esquina inferior derecha */
+      .cart-btn {
+        right: 25px;
+        background-color: var(--color-accent);
+      }
+      .cart-btn:hover {
+        background-color: var(--color-primary);
+      }
+
+      @media (max-width: 768px) {
+        .floating-btn {
+          width: 55px;
+          height: 55px;
+          font-size: 1.3rem;
+        }
+      }
     </style>
   </body>
 </html>

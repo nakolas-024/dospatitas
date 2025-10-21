@@ -2,16 +2,24 @@
 import Icon from './Icon.astro';
 ---
 
-<a href="https://wa.me/+56966306409" class="whatsapp-fab" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">
+<a
+  href="https://wa.me/+56966306409"
+  class="whatsapp-fab"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Contactar por WhatsApp"
+>
   <Icon name="whatsapp" size={32} />
 </a>
 
 <style>
 .whatsapp-fab {
   position: fixed;
-  bottom: 25px;
-  right: 25px;
+  bottom: 100px; /* ✅ Lo subimos un poco para no chocar con el carrito */
+  right: 25px; /* ✅ Lo movemos al lado derecho */
+  left: auto;
   z-index: 1000;
+
   background-color: #25d366;
   color: white;
   width: 60px;
@@ -20,18 +28,27 @@ import Icon from './Icon.astro';
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
   transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
 .whatsapp-fab:hover {
   transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
   background-color: #20b358;
 }
 
 .whatsapp-fab:active {
   transform: scale(0.95);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* 👇 Ajuste adicional para pantallas pequeñas */
+@media (max-width: 768px) {
+  .whatsapp-fab {
+    bottom: 90px;
+    right: 20px;
+  }
 }
 </style>
+
