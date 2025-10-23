@@ -12,15 +12,16 @@
     "@astrojs/solid-js": "^5.1.1",
     "@iconify-json/mdi": "^1.2.3",
     "@supabase/supabase-js": "^2.75.0",
-    "astro": "^5.13.7",
+    "@tailwindcss/vite": "^4.1.16",
+    "astro": "^5.15.1",
     "astro-icon": "^1.1.5",
     "solid-js": "^1.9.9"
   },
   "devDependencies": {
-    "@astrojs/vercel": "^8.2.10",
+    "@astrojs/vercel": "^9.0.0",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.14"
+    "tailwindcss": "^4.1.16"
   },
   "description": "```sh npm create astro@latest -- --template basics ```",
   "main": "index.js",

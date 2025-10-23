@@ -1,13 +1,13 @@
-import { q as decryptString, v as createSlotValueFromString, w as isAstroComponentFactory, n as renderComponent, r as renderTemplate, R as ROUTE_TYPE_HEADER, x as REROUTE_DIRECTIVE_HEADER, A as AstroError, y as i18nNoLocaleFoundInPath, z as ResponseSentError, B as MiddlewareNoDataOrNextCalled, C as MiddlewareNotAResponse, D as originPathnameSymbol, G as RewriteWithBodyUsed, H as GetStaticPathsRequired, J as InvalidGetStaticPathsReturn, K as InvalidGetStaticPathsEntry, O as GetStaticPathsExpectedParams, P as GetStaticPathsInvalidRouteParam, Q as PageNumberParamNotFound, S as DEFAULT_404_COMPONENT, T as ActionNotFoundError, V as NoMatchingStaticPathFound, W as PrerenderDynamicEndpointPathCollide, X as ReservedSlotName, Y as renderSlotToString, Z as renderJSX, _ as chunkToString, $ as isRenderInstruction, a0 as ForbiddenRewrite, a1 as SessionStorageInitError, a2 as SessionStorageSaveError, a3 as ASTRO_VERSION, a4 as CspNotEnabled, a5 as LocalsReassigned, a6 as generateCspDigest, a7 as PrerenderClientAddressNotAvailable, a8 as clientAddressSymbol, a9 as ClientAddressNotAvailable, aa as StaticClientAddressNotAvailable, ab as AstroResponseHeadersReassigned, ac as responseSentSymbol$1, ad as renderPage, ae as REWRITE_DIRECTIVE_HEADER_KEY, af as REWRITE_DIRECTIVE_HEADER_VALUE, ag as renderEndpoint, ah as LocalsNotAnObject, ai as REROUTABLE_STATUS_CODES } from './astro/server_DVBAnwcH.mjs';
-import { bold, red, yellow, dim, blue, green } from 'kleur/colors';
+import { w as decryptString, x as createSlotValueFromString, y as isAstroComponentFactory, n as renderComponent, r as renderTemplate, R as ROUTE_TYPE_HEADER, z as REROUTE_DIRECTIVE_HEADER, A as AstroError, B as i18nNoLocaleFoundInPath, C as ResponseSentError, D as ActionNotFoundError, G as MiddlewareNoDataOrNextCalled, H as MiddlewareNotAResponse, J as originPathnameSymbol, K as RewriteWithBodyUsed, O as GetStaticPathsRequired, P as InvalidGetStaticPathsReturn, Q as InvalidGetStaticPathsEntry, S as GetStaticPathsExpectedParams, T as GetStaticPathsInvalidRouteParam, V as PageNumberParamNotFound, W as DEFAULT_404_COMPONENT, X as NoMatchingStaticPathFound, Y as PrerenderDynamicEndpointPathCollide, Z as ReservedSlotName, _ as renderSlotToString, $ as renderJSX, a0 as chunkToString, a1 as isRenderInstruction, a2 as ForbiddenRewrite, a3 as SessionStorageInitError, a4 as SessionStorageSaveError, a5 as ASTRO_VERSION, a6 as CspNotEnabled, a7 as LocalsReassigned, a8 as generateCspDigest, a9 as PrerenderClientAddressNotAvailable, aa as clientAddressSymbol, ab as ClientAddressNotAvailable, ac as StaticClientAddressNotAvailable, ad as AstroResponseHeadersReassigned, ae as responseSentSymbol$1, af as renderPage, ag as REWRITE_DIRECTIVE_HEADER_KEY, ah as REWRITE_DIRECTIVE_HEADER_VALUE, ai as renderEndpoint, aj as LocalsNotAnObject, ak as REROUTABLE_STATUS_CODES, al as nodeRequestAbortControllerCleanupSymbol } from './astro/server_QFBcFQ3r.mjs';
 import 'clsx';
 import { serialize, parse } from 'cookie';
-import { A as ActionError, d as deserializeActionResult, s as serializeActionResult, a as ACTION_RPC_ROUTE_PATTERN, b as ACTION_QUERY_PARAMS, g as getActionQueryString, D as DEFAULT_404_ROUTE, c as default404Instance, N as NOOP_MIDDLEWARE_FN, e as ensure404Route } from './astro-designed-error-pages_Bk44w8bK.mjs';
+import { A as ActionError, d as deserializeActionResult, s as serializeActionResult, a as ACTION_RPC_ROUTE_PATTERN, b as ACTION_QUERY_PARAMS, g as getActionQueryString, D as DEFAULT_404_ROUTE, c as default404Instance, N as NOOP_MIDDLEWARE_FN, e as ensure404Route } from './astro-designed-error-pages_C1FcgDNs.mjs';
 import 'es-module-lexer';
 import buffer from 'node:buffer';
 import crypto$1 from 'node:crypto';
 import { Http2ServerResponse } from 'node:http2';
-import { b as appendForwardSlash, j as joinPaths, f as fileExtension, s as slash, p as prependForwardSlash, r as removeTrailingForwardSlash, c as trimSlashes, d as isInternalPath, e as collapseDuplicateTrailingSlashes, h as hasFileExtension } from './index_DPYU2bcR.mjs';
+import { c as appendForwardSlash, j as joinPaths, f as fileExtension, s as slash, p as prependForwardSlash, r as removeTrailingForwardSlash, d as trimSlashes, m as matchPattern, e as isInternalPath, g as collapseDuplicateTrailingSlashes, h as hasFileExtension } from './index_DcV6kM1H.mjs';
+import colors from 'picocolors';
 import { unflatten as unflatten$1, stringify as stringify$1 } from 'devalue';
 import { createStorage, builtinDrivers } from 'unstorage';
 import '@vercel/routing-utils';
@@ -448,6 +448,9 @@ function redirectToFallback({
         if (pathFallbackLocale === defaultLocale && strategy === "pathname-prefix-other-locales") {
           if (context.url.pathname.includes(`${base}`)) {
             newPathname = context.url.pathname.replace(`/${urlLocale}`, ``);
+            if (newPathname === "") {
+              newPathname = "/";
+            }
           } else {
             newPathname = context.url.pathname.replace(`/${urlLocale}`, `/`);
           }
@@ -544,7 +547,13 @@ class AstroCookies {
     if (key in values) {
       const value = values[key];
       if (value) {
-        return new AstroCookie(decode(value));
+        let decodedValue;
+        try {
+          decodedValue = decode(value);
+        } catch (_error) {
+          decodedValue = value;
+        }
+        return new AstroCookie(decodedValue);
       }
     }
   }
@@ -733,7 +742,7 @@ function getEventPrefix({ level, label }) {
   const timestamp = `${dateTimeFormat.format(/* @__PURE__ */ new Date())}`;
   const prefix = [];
   if (level === "error" || level === "warn") {
-    prefix.push(bold(timestamp));
+    prefix.push(colors.bold(timestamp));
     prefix.push(`[${level.toUpperCase()}]`);
   } else {
     prefix.push(timestamp);
@@ -742,15 +751,15 @@ function getEventPrefix({ level, label }) {
     prefix.push(`[${label}]`);
   }
   if (level === "error") {
-    return red(prefix.join(" "));
+    return colors.red(prefix.join(" "));
   }
   if (level === "warn") {
-    return yellow(prefix.join(" "));
+    return colors.yellow(prefix.join(" "));
   }
   if (prefix.length === 1) {
-    return dim(prefix[0]);
+    return colors.dim(prefix[0]);
   }
-  return dim(prefix[0]) + " " + blue(prefix.splice(1).join(" "));
+  return colors.dim(prefix[0]) + " " + colors.blue(prefix.splice(1).join(" "));
 }
 class Logger {
   options;
@@ -819,26 +828,31 @@ const consoleLogDestination = {
 };
 
 function getAssetsPrefix(fileExtension, assetsPrefix) {
-  if (!assetsPrefix) return "";
-  if (typeof assetsPrefix === "string") return assetsPrefix;
-  const dotLessFileExtension = fileExtension.slice(1);
-  if (assetsPrefix[dotLessFileExtension]) {
-    return assetsPrefix[dotLessFileExtension];
+  let prefix = "";
+  if (!assetsPrefix) {
+    prefix = "";
+  } else if (typeof assetsPrefix === "string") {
+    prefix = assetsPrefix;
+  } else {
+    const dotLessFileExtension = fileExtension.slice(1);
+    prefix = assetsPrefix[dotLessFileExtension] || assetsPrefix.fallback;
   }
-  return assetsPrefix.fallback;
+  return prefix;
 }
 
-function createAssetLink(href, base, assetsPrefix) {
+function createAssetLink(href, base, assetsPrefix, queryParams) {
+  let url = "";
   if (assetsPrefix) {
     const pf = getAssetsPrefix(fileExtension(href), assetsPrefix);
-    return joinPaths(pf, slash(href));
+    url = joinPaths(pf, slash(href));
   } else if (base) {
-    return prependForwardSlash(joinPaths(base, slash(href)));
+    url = prependForwardSlash(joinPaths(base, slash(href)));
   } else {
-    return href;
+    url = href;
   }
+  return url;
 }
-function createStylesheetElement(stylesheet, base, assetsPrefix) {
+function createStylesheetElement(stylesheet, base, assetsPrefix, queryParams) {
   if (stylesheet.type === "inline") {
     return {
       props: {},
@@ -854,10 +868,12 @@ function createStylesheetElement(stylesheet, base, assetsPrefix) {
     };
   }
 }
-function createStylesheetElementSet(stylesheets, base, assetsPrefix) {
-  return new Set(stylesheets.map((s) => createStylesheetElement(s, base, assetsPrefix)));
+function createStylesheetElementSet(stylesheets, base, assetsPrefix, queryParams) {
+  return new Set(
+    stylesheets.map((s) => createStylesheetElement(s, base, assetsPrefix))
+  );
 }
-function createModuleScriptElement(script, base, assetsPrefix) {
+function createModuleScriptElement(script, base, assetsPrefix, queryParams) {
   if (script.type === "external") {
     return createModuleScriptElementWithSrc(script.value, base, assetsPrefix);
   } else {
@@ -869,7 +885,7 @@ function createModuleScriptElement(script, base, assetsPrefix) {
     };
   }
 }
-function createModuleScriptElementWithSrc(src, base, assetsPrefix) {
+function createModuleScriptElementWithSrc(src, base, assetsPrefix, queryParams) {
   return {
     props: {
       type: "module",
@@ -900,7 +916,15 @@ function getActionContext(context) {
           pipeline.manifest.trailingSlash,
           pipeline.manifest.buildFormat
         ) ? removeTrailingForwardSlash(callerInfo.name) : callerInfo.name;
-        const baseAction = await pipeline.getAction(callerInfoName);
+        let baseAction;
+        try {
+          baseAction = await pipeline.getAction(callerInfoName);
+        } catch (error) {
+          if (error instanceof Error && "name" in error && typeof error.name === "string" && error.name === ActionNotFoundError.name) {
+            return { data: void 0, error: new ActionError({ code: "NOT_FOUND" }) };
+          }
+          throw error;
+        }
         let input;
         try {
           input = await parseRequestBody(context.request);
@@ -1548,7 +1572,8 @@ async function callGetStaticPaths({
   staticPaths = await mod.getStaticPaths({
     // Q: Why the cast?
     // A: So users downstream can have nicer typings, we have to make some sacrifice in our internal typings, which necessitate a cast here
-    paginate: generatePaginateFunction(route, base)
+    paginate: generatePaginateFunction(route, base),
+    routePattern: route.route
   });
   validateGetStaticPathsResult(staticPaths, logger, route);
   const keyedStaticPaths = staticPaths;
@@ -2628,14 +2653,14 @@ class RenderContext {
         if (this.isPrerendered) {
           pipeline.logger.warn(
             "session",
-            `context.session was used when rendering the route ${green(this.routePattern)}, but it is not available on prerendered routes. If you need access to sessions, make sure that the route is server-rendered using \`export const prerender = false;\` or by setting \`output\` to \`"server"\` in your Astro config to make all your routes server-rendered by default. For more information, see https://docs.astro.build/en/guides/sessions/`
+            `context.session was used when rendering the route ${colors.green(this.routePattern)}, but it is not available on prerendered routes. If you need access to sessions, make sure that the route is server-rendered using \`export const prerender = false;\` or by setting \`output\` to \`"server"\` in your Astro config to make all your routes server-rendered by default. For more information, see https://docs.astro.build/en/guides/sessions/`
           );
           return void 0;
         }
         if (!renderContext.session) {
           pipeline.logger.warn(
             "session",
-            `context.session was used when rendering the route ${green(this.routePattern)}, but no storage configuration was provided. Either configure the storage manually or use an adapter that provides session storage. For more information, see https://docs.astro.build/en/guides/sessions/`
+            `context.session was used when rendering the route ${colors.green(this.routePattern)}, but no storage configuration was provided. Either configure the storage manually or use an adapter that provides session storage. For more information, see https://docs.astro.build/en/guides/sessions/`
           );
           return void 0;
         }
@@ -2755,7 +2780,8 @@ class RenderContext {
       styleHashes: manifest.csp?.styleHashes ? [...manifest.csp.styleHashes] : [],
       styleResources: manifest.csp?.styleResources ? [...manifest.csp.styleResources] : [],
       directives: manifest.csp?.directives ? [...manifest.csp.directives] : [],
-      isStrictDynamic: manifest.csp?.isStrictDynamic ?? false
+      isStrictDynamic: manifest.csp?.isStrictDynamic ?? false,
+      internalFetchHeaders: manifest.internalFetchHeaders
     };
     return result;
   }
@@ -2829,14 +2855,14 @@ class RenderContext {
         if (this.isPrerendered) {
           pipeline.logger.warn(
             "session",
-            `Astro.session was used when rendering the route ${green(this.routePattern)}, but it is not available on prerendered pages. If you need access to sessions, make sure that the page is server-rendered using \`export const prerender = false;\` or by setting \`output\` to \`"server"\` in your Astro config to make all your pages server-rendered by default. For more information, see https://docs.astro.build/en/guides/sessions/`
+            `Astro.session was used when rendering the route ${colors.green(this.routePattern)}, but it is not available on prerendered pages. If you need access to sessions, make sure that the page is server-rendered using \`export const prerender = false;\` or by setting \`output\` to \`"server"\` in your Astro config to make all your pages server-rendered by default. For more information, see https://docs.astro.build/en/guides/sessions/`
           );
           return void 0;
         }
         if (!renderContext.session) {
           pipeline.logger.warn(
             "session",
-            `Astro.session was used when rendering the route ${green(this.routePattern)}, but no storage configuration was provided. Either configure the storage manually or use an adapter that provides session storage. For more information, see https://docs.astro.build/en/guides/sessions/`
+            `Astro.session was used when rendering the route ${colors.green(this.routePattern)}, but no storage configuration was provided. Either configure the storage manually or use an adapter that provides session storage. For more information, see https://docs.astro.build/en/guides/sessions/`
           );
           return void 0;
         }
@@ -3131,6 +3157,31 @@ class App {
   getAdapterLogger() {
     return this.#adapterLogger;
   }
+  getAllowedDomains() {
+    return this.#manifest.allowedDomains;
+  }
+  get manifest() {
+    return this.#manifest;
+  }
+  set manifest(value) {
+    this.#manifest = value;
+  }
+  matchesAllowedDomains(forwardedHost, protocol) {
+    return App.validateForwardedHost(forwardedHost, this.#manifest.allowedDomains, protocol);
+  }
+  static validateForwardedHost(forwardedHost, allowedDomains, protocol) {
+    if (!allowedDomains || allowedDomains.length === 0) {
+      return false;
+    }
+    try {
+      const testUrl = new URL(`${protocol || "https"}://${forwardedHost}`);
+      return allowedDomains.some((pattern) => {
+        return matchPattern(testUrl, pattern);
+      });
+    } catch {
+      return false;
+    }
+  }
   /**
    * Creates a pipeline by reading the stored manifest
    *
@@ -3213,13 +3264,17 @@ class App {
     let pathname = void 0;
     const url = new URL(request.url);
     if (this.#manifest.i18n && (this.#manifest.i18n.strategy === "domains-prefix-always" || this.#manifest.i18n.strategy === "domains-prefix-other-locales" || this.#manifest.i18n.strategy === "domains-prefix-always-no-redirect")) {
-      let host = request.headers.get("X-Forwarded-Host");
+      let forwardedHost = request.headers.get("X-Forwarded-Host");
       let protocol = request.headers.get("X-Forwarded-Proto");
       if (protocol) {
         protocol = protocol + ":";
       } else {
         protocol = url.protocol;
       }
+      if (forwardedHost && !this.matchesAllowedDomains(forwardedHost, protocol?.replace(":", ""))) {
+        forwardedHost = null;
+      }
+      let host = forwardedHost;
       if (!host) {
         host = request.headers.get("Host");
       }
@@ -3571,14 +3626,17 @@ class NodeApp extends App {
   match(req, allowPrerenderedRoutes = false) {
     if (!(req instanceof Request)) {
       req = NodeApp.createRequest(req, {
-        skipBody: true
+        skipBody: true,
+        allowedDomains: this.manifest.allowedDomains
       });
     }
     return super.match(req, allowPrerenderedRoutes);
   }
   render(req, routeDataOrOptions, maybeLocals) {
     if (!(req instanceof Request)) {
-      req = NodeApp.createRequest(req);
+      req = NodeApp.createRequest(req, {
+        allowedDomains: this.manifest.allowedDomains
+      });
     }
     return super.render(req, routeDataOrOptions, maybeLocals);
   }
@@ -3595,7 +3653,11 @@ class NodeApp extends App {
    * })
    * ```
    */
-  static createRequest(req, { skipBody = false } = {}) {
+  static createRequest(req, {
+    skipBody = false,
+    allowedDomains = []
+  } = {}) {
+    const controller = new AbortController();
     const isEncrypted = "encrypted" in req.socket && req.socket.encrypted;
     const getFirstForwardedValue = (multiValueHeader) => {
       return multiValueHeader?.toString()?.split(",").map((e) => e.trim())?.[0];
@@ -3603,8 +3665,15 @@ class NodeApp extends App {
     const forwardedProtocol = getFirstForwardedValue(req.headers["x-forwarded-proto"]);
     const providedProtocol = isEncrypted ? "https" : "http";
     const protocol = forwardedProtocol ?? providedProtocol;
-    const forwardedHostname = getFirstForwardedValue(req.headers["x-forwarded-host"]);
+    let forwardedHostname = getFirstForwardedValue(req.headers["x-forwarded-host"]);
     const providedHostname = req.headers.host ?? req.headers[":authority"];
+    if (forwardedHostname && !App.validateForwardedHost(
+      forwardedHostname,
+      allowedDomains,
+      forwardedProtocol ?? providedProtocol
+    )) {
+      forwardedHostname = void 0;
+    }
     const hostname = forwardedHostname ?? providedHostname;
     const port = getFirstForwardedValue(req.headers["x-forwarded-port"]);
     let url;
@@ -3617,13 +3686,48 @@ class NodeApp extends App {
     }
     const options = {
       method: req.method || "GET",
-      headers: makeRequestHeaders(req)
+      headers: makeRequestHeaders(req),
+      signal: controller.signal
     };
     const bodyAllowed = options.method !== "HEAD" && options.method !== "GET" && skipBody === false;
     if (bodyAllowed) {
       Object.assign(options, makeRequestBody(req));
     }
     const request = new Request(url, options);
+    const socket = getRequestSocket(req);
+    if (socket && typeof socket.on === "function") {
+      const existingCleanup = getAbortControllerCleanup(req);
+      if (existingCleanup) {
+        existingCleanup();
+      }
+      let cleanedUp = false;
+      const removeSocketListener = () => {
+        if (typeof socket.off === "function") {
+          socket.off("close", onSocketClose);
+        } else if (typeof socket.removeListener === "function") {
+          socket.removeListener("close", onSocketClose);
+        }
+      };
+      const cleanup = () => {
+        if (cleanedUp) return;
+        cleanedUp = true;
+        removeSocketListener();
+        controller.signal.removeEventListener("abort", cleanup);
+        Reflect.deleteProperty(req, nodeRequestAbortControllerCleanupSymbol);
+      };
+      const onSocketClose = () => {
+        cleanup();
+        if (!controller.signal.aborted) {
+          controller.abort();
+        }
+      };
+      socket.on("close", onSocketClose);
+      controller.signal.addEventListener("abort", cleanup, { once: true });
+      Reflect.set(req, nodeRequestAbortControllerCleanupSymbol, cleanup);
+      if (socket.destroyed) {
+        onSocketClose();
+      }
+    }
     const forwardedClientIp = getFirstForwardedValue(req.headers["x-forwarded-for"]);
     const clientIp = forwardedClientIp || req.socket?.remoteAddress;
     if (clientIp) {
@@ -3652,6 +3756,23 @@ class NodeApp extends App {
       destination.statusMessage = statusText;
     }
     destination.writeHead(status, createOutgoingHttpHeaders(headers));
+    const cleanupAbortFromDestination = getAbortControllerCleanup(
+      destination.req ?? void 0
+    );
+    if (cleanupAbortFromDestination) {
+      const runCleanup = () => {
+        cleanupAbortFromDestination();
+        if (typeof destination.off === "function") {
+          destination.off("finish", runCleanup);
+          destination.off("close", runCleanup);
+        } else {
+          destination.removeListener?.("finish", runCleanup);
+          destination.removeListener?.("close", runCleanup);
+        }
+      };
+      destination.on("finish", runCleanup);
+      destination.on("close", runCleanup);
+    }
     if (!body) return destination.end();
     try {
       const reader = body.getReader();
@@ -3722,6 +3843,21 @@ function asyncIterableToBodyProps(iterable) {
     // property because they are not up-to-date.
     duplex: "half"
   };
+}
+function getAbortControllerCleanup(req) {
+  if (!req) return void 0;
+  const cleanup = Reflect.get(req, nodeRequestAbortControllerCleanupSymbol);
+  return typeof cleanup === "function" ? cleanup : void 0;
+}
+function getRequestSocket(req) {
+  if (req.socket && typeof req.socket.on === "function") {
+    return req.socket;
+  }
+  const http2Socket = req.stream?.session?.socket;
+  if (http2Socket && typeof http2Socket.on === "function") {
+    return http2Socket;
+  }
+  return void 0;
 }
 
 apply();

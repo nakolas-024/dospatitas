@@ -1,6 +1,5 @@
-import { e as createComponent, f as createAstro, n as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../../chunks/astro/server_DVBAnwcH.mjs';
-import 'kleur/colors';
-import { $ as $$Layout } from '../../chunks/Layout_BddiXToK.mjs';
+import { e as createComponent, f as createAstro, n as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../../chunks/astro/server_QFBcFQ3r.mjs';
+import { $ as $$Layout } from '../../chunks/Layout_nYBf6Sp5.mjs';
 /* empty css                                    */
 export { renderers } from '../../renderers.mjs';
 
@@ -37,9 +36,9 @@ const $$Login = createComponent(async ($$result, $$props, $$slots) => {
     }
   }
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Iniciar sesi\xF3n | Dospatitas", "data-astro-cid-rf56lckb": true }, { "default": async ($$result2) => renderTemplate`  ${maybeRenderHead()}<main data-astro-cid-rf56lckb> <form method="POST" enctype="application/x-www-form-urlencoded" data-astro-cid-rf56lckb> <img src="/images/dospatitas-logo.png" alt="Dospatitas" class="logo" data-astro-cid-rf56lckb> <h1 data-astro-cid-rf56lckb>Acceso Administrativo</h1> <label for="user" data-astro-cid-rf56lckb>Usuario</label> <input type="text" id="user" name="user" placeholder="Ej: dospatitas" required data-astro-cid-rf56lckb> <label for="pass" data-astro-cid-rf56lckb>Contraseña</label> <input type="password" id="pass" name="pass" placeholder="••••••••••" required data-astro-cid-rf56lckb> <button type="submit" data-astro-cid-rf56lckb>Ingresar</button> ${error && renderTemplate`<p class="error" data-astro-cid-rf56lckb>${error}</p>`} </form> </main> ` })}`;
-}, "C:/Users/Luctus Umbram/Desktop/astro pages/DOSPATITAS/dospatitas.cl/src/pages/admin/login.astro", void 0);
+}, "C:/Users/Luctus Umbram/Desktop/astropages/DOSPATITAS/dospatitas.cl/src/pages/admin/login.astro", void 0);
 
-const $$file = "C:/Users/Luctus Umbram/Desktop/astro pages/DOSPATITAS/dospatitas.cl/src/pages/admin/login.astro";
+const $$file = "C:/Users/Luctus Umbram/Desktop/astropages/DOSPATITAS/dospatitas.cl/src/pages/admin/login.astro";
 const $$url = "/admin/login";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

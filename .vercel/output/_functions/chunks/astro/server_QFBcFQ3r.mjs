@@ -1,11 +1,11 @@
-import { bold } from 'kleur/colors';
+import colors from 'picocolors';
 import { clsx } from 'clsx';
 import { escape } from 'html-escaper';
 import { decodeBase64, encodeBase64, encodeHexUpperCase, decodeHex } from '@oslojs/encoding';
 import { z } from 'zod';
 import 'cssesc';
 
-const ASTRO_VERSION = "5.13.7";
+const ASTRO_VERSION = "5.15.1";
 const REROUTE_DIRECTIVE_HEADER = "X-Astro-Reroute";
 const REWRITE_DIRECTIVE_HEADER_KEY = "X-Astro-Rewrite";
 const REWRITE_DIRECTIVE_HEADER_VALUE = "yes";
@@ -16,6 +16,9 @@ const REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308, 300, 304];
 const REROUTABLE_STATUS_CODES = [404, 500];
 const clientAddressSymbol = Symbol.for("astro.clientAddress");
 const originPathnameSymbol = Symbol.for("astro.originPathname");
+const nodeRequestAbortControllerCleanupSymbol = Symbol.for(
+  "astro.nodeRequestAbortControllerCleanup"
+);
 const responseSentSymbol = Symbol.for("astro.responseSent");
 
 const ClientAddressNotAvailable = {
@@ -288,7 +291,7 @@ const FontFamilyNotFound = {
   name: "FontFamilyNotFound",
   title: "Font family not found",
   message: (family) => `No data was found for the \`"${family}"\` family passed to the \`<Font>\` component.`,
-  hint: "This is often caused by a typo. Check that your Font component is using a `cssVariable` specified in your config."
+  hint: "This is often caused by a typo. Check that the `<Font />` component or `getFontData()` function are using a `cssVariable` specified in your config."
 };
 const CspNotEnabled = {
   name: "CspNotEnabled",
@@ -447,8 +450,6 @@ Use import.meta.glob instead: https://vitejs.dev/guide/features.html#glob-import
 }
 function createAstro(site) {
   return {
-    // TODO: this is no longer necessary for `Astro.site`
-    // but it somehow allows working around caching issues in content collections for some tests
     site: void 0,
     generator: `Astro v${ASTRO_VERSION}`,
     glob: createAstroGlobFn()
@@ -465,7 +466,7 @@ async function renderEndpoint(mod, context, isPrerendered, logger) {
   if (isPrerendered && !["GET", "HEAD"].includes(method)) {
     logger.warn(
       "router",
-      `${url.pathname} ${bold(
+      `${url.pathname} ${colors.bold(
         method
       )} requests are not available in static endpoints. Mark this page as server-rendered (\`export const prerender = false;\`) or update your config to \`output: 'server'\` to make all your pages server-rendered by default.`
     );
@@ -982,7 +983,7 @@ function isRenderInstruction(chunk) {
 }
 
 const voidElementNames = /^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
-const htmlBooleanAttributes = /^(?:allowfullscreen|async|autofocus|autoplay|checked|controls|default|defer|disabled|disablepictureinpicture|disableremoteplayback|formnovalidate|hidden|inert|loop|nomodule|novalidate|open|playsinline|readonly|required|reversed|scoped|seamless|selected|itemscope)$/i;
+const htmlBooleanAttributes = /^(?:allowfullscreen|async|autofocus|autoplay|checked|controls|default|defer|disabled|disablepictureinpicture|disableremoteplayback|formnovalidate|hidden|inert|loop|muted|nomodule|novalidate|open|playsinline|readonly|required|reversed|scoped|seamless|selected|itemscope)$/i;
 const AMPERSAND_REGEX = /&/g;
 const DOUBLE_QUOTE_REGEX = /"/g;
 const STATIC_DIRECTIVES = /* @__PURE__ */ new Set(["set:html", "set:text"]);
@@ -1253,7 +1254,7 @@ z.custom((value) => {
 const ALGORITHM = "AES-GCM";
 async function decodeKey(encoded) {
   const bytes = decodeBase64(encoded);
-  return crypto.subtle.importKey("raw", Buffer.from(bytes), ALGORITHM, true, [
+  return crypto.subtle.importKey("raw", bytes.buffer, ALGORITHM, true, [
     "encrypt",
     "decrypt"
   ]);
@@ -1280,10 +1281,10 @@ async function decryptString(key, encoded) {
   const decryptedBuffer = await crypto.subtle.decrypt(
     {
       name: ALGORITHM,
-      iv: Buffer.from(iv)
+      iv
     },
     key,
-    Buffer.from(dataArray)
+    dataArray
   );
   const decryptedString = decoder$1.decode(decryptedBuffer);
   return decryptedString;
@@ -1563,9 +1564,12 @@ class ServerIslandComponent {
         )
       );
     }
+    const adapterHeaders = this.result.internalFetchHeaders || {};
+    const headersJson = safeJsonStringify(adapterHeaders);
     const method = useGETRequest ? (
       // GET request
-      `let response = await fetch('${serverIslandUrl}');`
+      `const headers = new Headers(${headersJson});
+let response = await fetch('${serverIslandUrl}', { headers });`
     ) : (
       // POST request
       `let data = {
@@ -1573,9 +1577,11 @@ class ServerIslandComponent {
 	encryptedProps: ${safeJsonStringify(propsEncrypted)},
 	slots: ${safeJsonStringify(renderedSlots)},
 };
+const headers = new Headers({ 'Content-Type': 'application/json', ...${headersJson} });
 let response = await fetch('${serverIslandUrl}', {
 	method: 'POST',
 	body: JSON.stringify(data),
+	headers,
 });`
     );
     this.islandContent = `${method}replaceServerIsland('${hostId}', response);`;
@@ -2777,4 +2783,4 @@ function spreadAttributes(values = {}, _name, { class: scopedClassName } = {}) {
   return markHTMLString(output);
 }
 
-export { isRenderInstruction as $, AstroError as A, MiddlewareNoDataOrNextCalled as B, MiddlewareNotAResponse as C, originPathnameSymbol as D, ExpectedImage as E, FailedToFetchRemoteImageDimensions as F, RewriteWithBodyUsed as G, GetStaticPathsRequired as H, IncompatibleDescriptorOptions as I, InvalidGetStaticPathsReturn as J, InvalidGetStaticPathsEntry as K, LocalImageUsedWrongly as L, MissingImageDimension as M, NoImageMetadata as N, GetStaticPathsExpectedParams as O, GetStaticPathsInvalidRouteParam as P, PageNumberParamNotFound as Q, ROUTE_TYPE_HEADER as R, DEFAULT_404_COMPONENT as S, ActionNotFoundError as T, UnsupportedImageFormat as U, NoMatchingStaticPathFound as V, PrerenderDynamicEndpointPathCollide as W, ReservedSlotName as X, renderSlotToString as Y, renderJSX as Z, chunkToString as _, UnsupportedImageConversion as a, ForbiddenRewrite as a0, SessionStorageInitError as a1, SessionStorageSaveError as a2, ASTRO_VERSION as a3, CspNotEnabled as a4, LocalsReassigned as a5, generateCspDigest as a6, PrerenderClientAddressNotAvailable as a7, clientAddressSymbol as a8, ClientAddressNotAvailable as a9, StaticClientAddressNotAvailable as aa, AstroResponseHeadersReassigned as ab, responseSentSymbol as ac, renderPage as ad, REWRITE_DIRECTIVE_HEADER_KEY as ae, REWRITE_DIRECTIVE_HEADER_VALUE as af, renderEndpoint as ag, LocalsNotAnObject as ah, REROUTABLE_STATUS_CODES as ai, NOOP_MIDDLEWARE_HEADER as aj, REDIRECT_STATUS_CODES as ak, ActionsReturnedInvalidDataError as al, MissingSharp as am, ExpectedImageOptions as b, ExpectedNotESMImage as c, InvalidImageService as d, createComponent as e, createAstro as f, ImageMissingAlt as g, addAttribute as h, ExperimentalFontsNotEnabled as i, FontFamilyNotFound as j, renderHead as k, renderScript as l, maybeRenderHead as m, renderComponent as n, renderSlot as o, decodeKey as p, decryptString as q, renderTemplate as r, spreadAttributes as s, toStyleString as t, unescapeHTML as u, createSlotValueFromString as v, isAstroComponentFactory as w, REROUTE_DIRECTIVE_HEADER as x, i18nNoLocaleFoundInPath as y, ResponseSentError as z };
+export { renderJSX as $, AstroError as A, i18nNoLocaleFoundInPath as B, ResponseSentError as C, ActionNotFoundError as D, ExpectedImage as E, FailedToFetchRemoteImageDimensions as F, MiddlewareNoDataOrNextCalled as G, MiddlewareNotAResponse as H, IncompatibleDescriptorOptions as I, originPathnameSymbol as J, RewriteWithBodyUsed as K, LocalImageUsedWrongly as L, MissingImageDimension as M, NoImageMetadata as N, GetStaticPathsRequired as O, InvalidGetStaticPathsReturn as P, InvalidGetStaticPathsEntry as Q, ROUTE_TYPE_HEADER as R, GetStaticPathsExpectedParams as S, GetStaticPathsInvalidRouteParam as T, UnsupportedImageFormat as U, PageNumberParamNotFound as V, DEFAULT_404_COMPONENT as W, NoMatchingStaticPathFound as X, PrerenderDynamicEndpointPathCollide as Y, ReservedSlotName as Z, renderSlotToString as _, UnsupportedImageConversion as a, chunkToString as a0, isRenderInstruction as a1, ForbiddenRewrite as a2, SessionStorageInitError as a3, SessionStorageSaveError as a4, ASTRO_VERSION as a5, CspNotEnabled as a6, LocalsReassigned as a7, generateCspDigest as a8, PrerenderClientAddressNotAvailable as a9, clientAddressSymbol as aa, ClientAddressNotAvailable as ab, StaticClientAddressNotAvailable as ac, AstroResponseHeadersReassigned as ad, responseSentSymbol as ae, renderPage as af, REWRITE_DIRECTIVE_HEADER_KEY as ag, REWRITE_DIRECTIVE_HEADER_VALUE as ah, renderEndpoint as ai, LocalsNotAnObject as aj, REROUTABLE_STATUS_CODES as ak, nodeRequestAbortControllerCleanupSymbol as al, NOOP_MIDDLEWARE_HEADER as am, REDIRECT_STATUS_CODES as an, ActionsReturnedInvalidDataError as ao, MissingSharp as ap, ExpectedImageOptions as b, ExpectedNotESMImage as c, InvalidImageService as d, createComponent as e, createAstro as f, ImageMissingAlt as g, addAttribute as h, ExperimentalFontsNotEnabled as i, FontFamilyNotFound as j, renderHead as k, renderScript as l, maybeRenderHead as m, renderComponent as n, Fragment as o, defineScriptVars as p, renderSlot as q, renderTemplate as r, spreadAttributes as s, toStyleString as t, unescapeHTML as u, decodeKey as v, decryptString as w, createSlotValueFromString as x, isAstroComponentFactory as y, REROUTE_DIRECTIVE_HEADER as z };
