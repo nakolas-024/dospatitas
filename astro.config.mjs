@@ -1,23 +1,10 @@
-// @ts-check
-
+// astro.config.mjs
 import { defineConfig } from 'astro/config';
-
-import icon from "astro-icon";
-
-import vercel from '@astrojs/vercel/serverless'; // Adapter para Vercel
-
-
+import vercel from '@astrojs/vercel'; // ✅ Este es el correcto
+import icon from 'astro-icon';
 
 export default defineConfig({
-
-  output: 'server',       // necesario para SSR
-
-  adapter: vercel(),       // usar Vercel serverless
-
-  integrations: [
-
-    icon()
-
-  ]
-
+  output: 'server',       // Necesario para SSR
+  adapter: vercel(),      // ✅ No uses /serverless
+  integrations: [icon()],
 });
