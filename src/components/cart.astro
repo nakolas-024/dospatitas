@@ -1,15 +1,16 @@
 ---
-// src/components/Cart.astro (Versión con estética final - Revisado y Correcto)
 ---
-<div id="cart-panel" class="cart-panel" aria-hidden="true">
+<div id="cart-panel" class="cart-window" aria-hidden="true">
   <div class="panel-header">
     <h3>Tu Pedido</h3>
     <button id="close-cart-btn" class="close-btn" aria-label="Cerrar carrito">×</button>
   </div>
-  <div id="cart-items-container" class="cart-items-container"></div>
+  <div id="cart-items-container" class="cart-items-container">
+     <p class="empty-cart-message">Cargando carrito...</p>
+  </div>
   <div class="panel-footer">
     <a id="whatsapp-checkout-btn" href="#" class="whatsapp-btn disabled" target="_blank" rel="noopener noreferrer">
-      Hacer Pedido por WhatsApp
+      Hacer Pedido
     </a>
   </div>
 </div>
@@ -18,72 +19,96 @@
 document.addEventListener('DOMContentLoaded', () => {
   const cartPanel = document.getElementById('cart-panel');
   const closeCartBtn = document.getElementById('close-cart-btn');
+  const itemsContainer = document.getElementById('cart-items-container');
+  const checkoutBtn = document.getElementById('whatsapp-checkout-btn');
   const WHATSAPP_NUMBER = '56958473816';
 
+  if (!cartPanel || !closeCartBtn || !itemsContainer || !checkoutBtn) return;
+
+  const closeCartWindow = () => { cartPanel.classList.remove('is-open'); };
+
   const updateCartContent = () => {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const itemsContainer = document.getElementById('cart-items-container');
-    const checkoutBtn = document.getElementById('whatsapp-checkout-btn');
+    let cart = [];
+    try { cart = JSON.parse(localStorage.getItem('cart')) || []; } catch(e) { cart = []; }
+
+    if (!Array.isArray(cart)) cart = [];
 
     if (cart.length === 0) {
       itemsContainer.innerHTML = '<p class="empty-cart-message">Tu carrito está vacío.</p>';
       checkoutBtn.classList.add('disabled');
+    } else {
+      let generatedHTML = '';
+      cart.forEach((item) => {
+          if (!item || !item.id) return;
+
+          const itemId = item.id;
+          const itemName = item.name || 'Producto';
+          const itemQuantity = parseInt(item.quantity, 10) || 1;
+          const imageUrl = item.image_url_ref || '/images/placeholder.png';
+
+          generatedHTML += `
+            <div class="cart-item" data-id="${itemId}">
+              <div class="item-img-wrapper">
+                <img src="${imageUrl}" alt="${itemName}" class="item-img"/>
+              </div>
+              <div class="item-name-container">
+                <p class="item-name">${itemName}</p>
+              </div>
+              <div class="item-controls">
+                <div class="item-quantity">
+                  <button class="quantity-btn decrease" data-action="decrease">-</button>
+                  <span>${itemQuantity}</span>
+                  <button class="quantity-btn increase" data-action="increase">+</button>
+                </div>
+                <button class="remove-item-btn" aria-label="Eliminar">×</button>
+              </div>
+            </div>
+          `;
+      });
+      itemsContainer.innerHTML = generatedHTML;
+      checkoutBtn.classList.remove('disabled');
+      updateWhatsappLink(cart, checkoutBtn);
+    }
+  };
+
+  const updateWhatsappLink = (cart, btn) => {
+    if (!cart || cart.length === 0) {
+      btn.classList.add('disabled');
+      btn.href = '#';
       return;
     }
-
-    itemsContainer.innerHTML = cart.map(item => `
-      <div class="cart-item" data-id="${item.id}">
-        <div class="item-details">
-          <p class="item-name">${item.name}</p>
-          <div class="item-quantity">
-            <button class="quantity-btn" data-action="decrease">-</button>
-            <span>${item.quantity}</span>
-            <button class="quantity-btn" data-action="increase">+</button>
-          </div>
-        </div>
-        <button class="remove-item-btn" aria-label="Eliminar item">×</button>
-      </div>
-    `).join('');
-
-    updateWhatsappLink(cart, checkoutBtn);
-    checkoutBtn.classList.remove('disabled');
-  };
-  
-  const updateWhatsappLink = (cart, btn) => {
-    let message = '¡Hola! Quisiera hacer el siguiente pedido:\n\n';
-    cart.forEach(item => { message += `- *${item.name}* (x${item.quantity})\n`; });
-    message += '\n¡Muchas gracias!';
-    btn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    let text = "Hola! Quiero pedir los siguientes productos:%0A";
+    cart.forEach(item => {
+      text += `- ${item.name} x${item.quantity}%0A`;
+    });
+    btn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+    btn.classList.remove('disabled');
   };
 
   const modifyItemQuantity = (productId, action) => {
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const itemIndex = cart.findIndex(item => item.id === productId);
-    if (itemIndex > -1) {
-      if (action === 'increase') cart[itemIndex].quantity++;
-      else if (action === 'decrease' && cart[itemIndex].quantity > 1) cart[itemIndex].quantity--;
-      else cart.splice(itemIndex, 1);
+    const idx = cart.findIndex(i => i.id == productId);
+    if (idx > -1) {
+      cart[idx].quantity = action === 'increase' ? (cart[idx].quantity+1) : (cart[idx].quantity-1);
+      if (cart[idx].quantity < 1) cart.splice(idx,1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      document.dispatchEvent(new CustomEvent('cartUpdated'));
     }
-    localStorage.setItem('cart', JSON.stringify(cart));
-    document.dispatchEvent(new CustomEvent('cartUpdated')); // Avisa a otros componentes (como el botón)
   };
 
   const removeItem = (productId) => {
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    cart = cart.filter(item => item.id !== productId);
-    localStorage.setItem('cart', JSON.stringify(cart));
-    document.dispatchEvent(new CustomEvent('cartUpdated')); // Avisa a otros componentes
+    const idx = cart.findIndex(i => i.id == productId);
+    if (idx > -1) {
+      cart.splice(idx,1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      document.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
   };
 
-  // Escuchar por la señal para abrirse
-  document.addEventListener('openCartPanel', () => cartPanel.classList.add('is-open'));
-  // Cerrar el panel
-  closeCartBtn.addEventListener('click', () => cartPanel.classList.remove('is-open'));
-  // Escuchar por la señal para actualizar su contenido
   document.addEventListener('cartUpdated', updateCartContent);
-  
-  // Manejar clics dentro del panel (cambiar cantidad, eliminar)
-  document.getElementById('cart-items-container').addEventListener('click', (e) => {
+  closeCartBtn.addEventListener('click', closeCartWindow);
+  itemsContainer.addEventListener('click', (e) => {
     const itemElement = e.target.closest('.cart-item');
     if (!itemElement) return;
     const productId = itemElement.dataset.id;
@@ -91,35 +116,67 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.matches('.remove-item-btn')) removeItem(productId);
   });
 
-  // Actualizar el contenido la primera vez que carga la página
   updateCartContent();
 });
 </script>
 
 <style>
-/* Estilos generales */
-.cart-panel { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background-color: white; box-shadow: -10px 0 30px rgba(0,0,0,0.15); z-index: 1100; transition: right 0.35s ease-in-out; display: flex; flex-direction: column; }
-.cart-panel.is-open { right: 0; }
-.panel-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; }
-.panel-header h3 { margin: 0; font-size: 1.3rem; font-weight: 700; color: #333; }
-.close-btn { background: none; border: none; font-size: 2rem; cursor: pointer; color: #888; transition: transform 0.2s; }
-.close-btn:hover { transform: rotate(90deg); }
-.cart-items-container { flex-grow: 1; overflow-y: auto; padding: 1.5rem; }
-.empty-cart-message { text-align: center; color: #888; margin-top: 4rem; font-size: 1.1rem; }
-.panel-footer { padding: 1.5rem; border-top: 1px solid #e5e7eb; background-color: #f9fafb; }
-.whatsapp-btn { display: block; width: 100%; padding: 1rem; background-color: #25D366; color: white; text-align: center; text-decoration: none; font-weight: 700; border-radius: 12px; transition: background-color 0.2s; font-size: 1rem; }
-.whatsapp-btn:hover { background-color: #128C7E; }
-.whatsapp-btn.disabled { background-color: #ccc; pointer-events: none; cursor: not-allowed; }
+.cart-window {
+  position: fixed;
+  top: 0; right: -100%;
+  width: 340px; max-width: 90%;
+  height: 100%;
+  background: #fff;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.25);
+  transition: right 0.3s ease;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+}
+.cart-window.is-open { right: 0; }
 
-/* Estilos con amor ❤️ */
-.cart-item { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "details remove" "quantity remove"; align-items: center; gap: 0.25rem 1rem; padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid #f0f0f0; }
-.cart-item:last-child { border-bottom: none; margin-bottom: 0; }
-.item-details { grid-area: details; }
-.item-name { font-weight: 600; font-size: 1rem; color: #374151; line-height: 1.4; margin: 0; }
-.item-quantity { grid-area: quantity; display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
-.quantity-btn { width: 28px; height: 28px; border: 1px solid #e0e0e0; background-color: white; border-radius: 50%; cursor: pointer; font-weight: 600; font-size: 1.2rem; color: #555; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
-.quantity-btn:hover { background-color: #ffeff4; color: #ff5a87; border-color: #ff5a87; }
-.item-quantity span { font-weight: 700; font-size: 1rem; min-width: 20px; text-align: center; color: #333; }
-.remove-item-btn { grid-area: remove; background: #f1f1f1; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.5rem; line-height: 1; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s, color 0.2s, transform 0.2s; }
-.remove-item-btn:hover { background-color: #ff5a87; color: white; transform: scale(1.1); }
+.panel-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #ddd; }
+.panel-header h3 { margin:0; }
+.close-btn { background:none; border:none; font-size:1.5rem; cursor:pointer; }
+
+.cart-items-container { flex:1; overflow-y:auto; padding:1rem; }
+
+.cart-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px solid #f0f0f0;
+}
+.cart-item:last-child { border-bottom:none; margin-bottom:0; }
+
+.item-img-wrapper {
+  width:50px; height:50px;
+  flex-shrink:0;
+  border-radius:8px;
+  overflow:hidden;
+  background:#f5f5f5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.item-img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.item-name-container { flex-grow: 1; min-width:0; }
+.item-name { font-weight:600; font-size:0.95rem; color:#374151; margin:0; line-height:1.3; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.item-controls { display:flex; align-items:center; gap:0.5rem; flex-shrink:0; }
+.item-quantity { display:flex; align-items:center; gap:0.3rem; }
+.quantity-btn { width:24px; height:24px; border:1px solid #e0e0e0; background:#fff; border-radius:50%; cursor:pointer; font-weight:600; font-size:1rem; color:#555; display:flex; align-items:center; justify-content:center; padding:0; }
+.item-quantity span { font-weight:600; font-size:0.9rem; min-width:16px; text-align:center; }
+
+.remove-item-btn { background:transparent; border:none; width:28px; height:28px; font-size:1.4rem; color:#f44336; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+
+.panel-footer { padding:1rem; border-top:1px solid #ddd; }
+.whatsapp-btn { display:block; text-align:center; background:#25d366; color:#fff; padding:0.8rem; border-radius:50px; text-decoration:none; font-weight:600; }
+.whatsapp-btn.disabled { opacity:0.6; pointer-events:none; }
+
+.empty-cart-message { text-align:center; color:#555; margin-top:2rem; }
+.error-message { text-align:center; color:red; margin-top:2rem; }
 </style>

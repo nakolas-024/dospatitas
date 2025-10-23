@@ -1,44 +1,44 @@
 ---
-// src/components/ProductCard.astro (VERSIÓN FINAL Y CORRECTA)
 export interface Props {
   product: {
     id: string | number;
     name: string;
     category: string;
     image_url_ref: string;
-    [key: string]: any; // Permite otras propiedades
+    [key: string]: any;
   };
 }
 const { product } = Astro.props;
 
-// Guarda de seguridad
-if (!product || typeof product !== 'object') {
-  console.error("ProductCard recibió una prop 'product' inválida:", Astro.props);
-  return null;
-}
+if (!product) return null;
 
-// Convertir a JSON SIN reemplazar comillas
-const productJsonString = JSON.stringify(product);
+const imageUrl = product.image_url_ref || '/images/placeholder.png';
+const modalId = `modal-${product.id}`;
 ---
 
-<div
-  class="product-card"
-  data-product={productJsonString} {/* Pasamos el JSON directamente */}
->
-  <div class="img-wrapper">
-    <img src={product.image_url_ref || '/images/placeholder.png'} alt={product.name || 'Producto'} loading="lazy" />
+<div class="product-card">
+  <div class="image-wrapper">
+    <img src={imageUrl} alt={product.name || 'Producto'} loading="lazy" />
   </div>
-  <h3>{product.name || 'Nombre no disponible'}</h3>
-  <p class="category">{product.category || 'Categoría no disponible'}</p>
+  <h3>{product.name || 'Sin nombre'}</h3>
+  <p class="category">{product.category || 'Sin categoría'}</p>
+
+  <button
+    class="view-btn"
+    type="button"
+    onclick={`document.getElementById('${modalId}').showModal()`}
+  >
+    Ver más
+  </button>
 </div>
 
 <style>
-/* Estilos (sin cambios respecto a la versión anterior) */
-.product-card { background: #fff; border-radius: 12px; padding: 1rem; box-shadow: 0 6px 15px rgba(0,0,0,0.05); text-align: center; cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; }
-.product-card:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-.img-wrapper { overflow: hidden; border-radius: 10px; margin-bottom: 0.5rem; }
-.product-card img { width: 100%; height: 240px; object-fit: cover; border-radius: 10px; transition: transform .4s ease; }
-.product-card:hover img { transform: scale(1.05); }
-.product-card h3 { font-size: 1.1rem; color: #333; font-weight: 700; margin: 0.6rem 0 0.2rem; }
-.product-card .category { font-size: .9rem; color: #777; margin: 0; }
+.product-card { background: #fff; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; padding: 1rem; text-align: center; transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
+.product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+.image-wrapper { width: 100%; height: 220px; display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 10px; background: #fafafa; margin-bottom: 0.75rem; }
+.image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+h3 { margin: 0.8rem 0 0.2rem; font-size: 1.1rem; font-weight: 700; color: #333; line-height: 1.3; flex-grow: 1; }
+.category { color: #888; font-size: 0.9rem; margin-bottom: 0.75rem; }
+.view-btn { background: #f0ce0c; color: #333; font-weight: 600; border: none; border-radius: 50px; padding: 0.6rem 1.4rem; cursor: pointer; transition: background 0.2s; margin-top: auto; }
+.view-btn:hover { background: #e3bd00; }
 </style>

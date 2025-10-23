@@ -3,117 +3,91 @@ export interface Props {
   product: {
     id: string | number;
     name: string;
-    category: string;
-    image_url_full: string; // Imagen completa del producto
+    description?: string;
+    image_url_full: string;
+    image_url_ref: string;
     [key: string]: any;
   };
 }
 const { product } = Astro.props;
+if (!product || typeof product !== 'object') return null;
 
-// Seguridad
-if (!product || typeof product !== 'object') {
-  console.error("ProductFullCard recibió una prop 'product' inválida:", Astro.props);
-  return null;
-}
+const imageUrl = product.image_url_full || product.image_url_ref || '/images/placeholder.png';
+const modalId = `modal-${product.id}`;
+
+const productDataForScript = {
+  id: product.id,
+  name: product.name,
+  image_url_ref: product.image_url_ref
+};
 ---
 
-<div class="product-full-modal" id={`modal-${product.id}`}>
-  <div class="modal-overlay"></div>
+<dialog id={modalId} class="product-modal">
   <div class="modal-content">
-    <button class="modal-close" aria-label="Cerrar">&times;</button>
-    <div class="modal-image">
-      <img src={product.image_url_full || '/images/placeholder.png'} alt={product.name || 'Producto'} />
-    </div>
-    <div class="modal-info">
-      <h2>{product.name}</h2>
-      <p class="category">{product.category}</p>
-      <button class="btn-add-cart">Agregar al carrito</button>
-    </div>
+    <button class="close-modal" aria-label="Cerrar" onclick={`document.getElementById('${modalId}').close()`}>×</button>
+
+    <img src={imageUrl} alt={product.name} class="modal-image" loading="lazy" />
+    <h2>{product.name}</h2>
+    {product.description && <p class="description">{product.description}</p>}
+
+    <button class="add-to-cart-btn" type="button">
+      Añadir al carrito 🛒
+    </button>
   </div>
-</div>
 
-<script type="module">
-document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById(`modal-${product.id}`);
-  const closeBtn = modal.querySelector('.modal-close');
-  const overlay = modal.querySelector('.modal-overlay');
+  <script define:vars={{ modalId, productData: productDataForScript }}>
+    const dialog = document.getElementById(modalId);
+    const addToCartButton = dialog.querySelector('.add-to-cart-btn');
 
-  // Función de cerrar
-  const closeModal = () => modal.classList.remove('open');
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
 
-  closeBtn.addEventListener('click', closeModal);
-  overlay.addEventListener('click', closeModal);
+    dialog.addEventListener('close', () => {
+        if (addToCartButton) {
+            addToCartButton.textContent = 'Añadir al carrito 🛒';
+            addToCartButton.disabled = false;
+        }
+    });
 
-  // Abrir modal cuando se haga click en la card correspondiente
-  const productCard = document.querySelector(`.product-card[data-product*='"id":${JSON.stringify(product.id)}']`);
-  if (productCard) {
-    productCard.addEventListener('click', () => modal.classList.add('open'));
-  }
-});
-</script>
+    if (addToCartButton) {
+      addToCartButton.addEventListener('click', () => {
+        const productToAdd = productData;
+        if (!productToAdd || !productToAdd.id) return;
+
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem('cart')) || []; } catch(e) {}
+        if (!Array.isArray(cart)) cart = [];
+
+        const existingIndex = cart.findIndex(item => item.id == productToAdd.id);
+        if (existingIndex > -1) {
+          cart[existingIndex].quantity = (cart[existingIndex].quantity || 0) + 1;
+        } else {
+          cart.push({ ...productToAdd, quantity: 1 });
+        }
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+        document.dispatchEvent(new CustomEvent('cartUpdated'));
+
+        addToCartButton.textContent = '✅ Agregado';
+        addToCartButton.disabled = true;
+
+        setTimeout(() => { dialog.close(); }, 1000);
+      });
+    }
+  </script>
+</dialog>
 
 <style>
-.product-full-modal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.product-full-modal.open {
-  display: flex;
-}
-.modal-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-}
-.modal-content {
-  position: relative;
-  background: #fff;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 90%;
-  z-index: 10;
-  overflow: hidden;
-  text-align: center;
-  animation: fadeIn 0.25s ease;
-}
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 2rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.modal-image img {
-  width: 100%;
-  height: auto;
-}
-.modal-info {
-  padding: 1rem 2rem 2rem;
-}
-.modal-info h2 { margin: 0.5rem 0; font-size: 1.5rem; }
-.modal-info .category { color: #777; margin-bottom: 1rem; }
-.btn-add-cart {
-  background: #ffafcc;
-  color: #fff;
-  padding: 0.8rem 2rem;
-  border: none;
-  border-radius: 50px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.btn-add-cart:hover {
-  background: #ff7bb0;
-  transform: scale(1.05);
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.product-modal { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); padding: 0; max-width: 600px; width: 90%; position: relative; }
+.product-modal::backdrop { background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px); }
+.modal-content { padding: 2rem; text-align: center; }
+.modal-image { width: 100%; max-height: 400px; object-fit: contain; border-radius: 12px; margin-bottom: 1rem; }
+.close-modal { position: absolute; top: 10px; right: 15px; background: #eee; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.5rem; line-height: 1; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s, color 0.2s; z-index: 10; }
+.close-modal:hover { background-color: #ddd; color: #111; }
+h2 { margin-bottom: 0.5rem; color: #333; font-size: 1.5rem; font-weight: 700;}
+p.description { color: #555; margin-top: 0; line-height: 1.6; margin-bottom: 1.5rem; }
+.add-to-cart-btn { display: inline-block; background: #f0ce0c; color: #333; font-weight: 700; padding: .8rem 1.8rem; border-radius: 50px; border: none; cursor: pointer; transition: background .25s ease, transform 0.2s ease; font-size: 1rem; width: 100%; max-width: 300px; margin-top: 1rem; }
+.add-to-cart-btn:hover { background: #e3bd00; transform: scale(1.03); }
+.add-to-cart-btn:disabled { background-color: #4caf50; color: white; cursor: not-allowed; transform: none; }
 </style>
