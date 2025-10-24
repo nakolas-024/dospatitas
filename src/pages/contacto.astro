@@ -1,7 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 import Icon from '../components/Icon.astro';
 
 const contactMethods = [
@@ -13,24 +11,23 @@ const contactMethods = [
     cta: 'Enviar Mensaje'
   },
   {
-    icon: 'mdi:instagram',
-    title: 'Instagram',
-    text: 'Síguenos para ver nuestros últimos diseños, novedades y promociones especiales.',
-    href: 'https://www.instagram.com/TUPERFILDEINSTAGRAM',
-    cta: 'Seguir en Instagram'
-  },
-  {
     icon: 'mdi:email-outline',
     title: 'Correo Electrónico',
-    text: 'Para consultas más detalladas o colaboraciones, puedes escribirnos un email.',
-    href: 'mailto:tuemail@example.com',
+    text: 'Para consultas más detalladas o pedidos especiales, puedes escribirnos directamente.',
+    href: 'mailto:contacto@dospatitas.cl',
     cta: 'Escribir Correo'
+  },
+  {
+    icon: 'mdi:facebook',
+    title: 'Facebook',
+    text: 'Síguenos para conocer nuestras novedades, rescates y promociones.',
+    href: 'https://www.facebook.com/dospatitas.cl',
+    cta: 'Ir a Facebook'
   }
 ];
 ---
 
 <Layout title="Contacto">
-  <Header />
   <main class="contact-page">
     <div class="container">
       <div class="page-header">
@@ -54,7 +51,6 @@ const contactMethods = [
       </div>
     </div>
   </main>
-  <Footer />
 </Layout>
 
 <style>
@@ -62,20 +58,24 @@ const contactMethods = [
   padding: 4rem 0;
   background-color: var(--color-background-alt, #f9fafb);
 }
+
 .container {
-  max-width: 900px; /* Un poco más estrecho para centrar el contenido */
+  max-width: 900px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
+
 .page-header {
   text-align: center;
   margin-bottom: 3rem;
 }
+
 .page-header h1 {
   font-size: 2.5rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
 }
+
 .page-header .subtitle {
   font-size: 1.1rem;
   color: var(--color-text-light, #555);
@@ -100,7 +100,7 @@ const contactMethods = [
 }
 
 .icon-wrapper {
-  color: #c23b63; /* Color rosado de la marca */
+  color: #c23b63;
   margin-bottom: 1rem;
 }
 
@@ -115,7 +115,7 @@ const contactMethods = [
   color: var(--color-text-light, #555);
   line-height: 1.6;
   margin-top: 0;
-  flex-grow: 1; /* Empuja el botón hacia abajo */
+  flex-grow: 1;
 }
 
 .contact-button {
