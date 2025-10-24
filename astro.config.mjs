@@ -1,10 +1,9 @@
-// astro.config.mjs
 import { defineConfig } from 'astro/config';
-import vercel from '@astrojs/vercel'; // ✅ Este es el correcto
+import vercel from '@astrojs/vercel';
 import icon from 'astro-icon';
 
 export default defineConfig({
-  output: 'server',       // Necesario para SSR
-  adapter: vercel(),      // ✅ No uses /serverless
+  output: 'server',
+  adapter: vercel(),  // ✅ Solo @astrojs/vercel
   integrations: [icon()],
 });
