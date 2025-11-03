@@ -1,0 +1,102 @@
+---
+// src/pages/catalogo/veterinarios.astro (CORREGIDO - Usando Componentes)
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.astro';       // Importar la tarjeta
+import ProductFullCard from '../../components/ProductFullCard.astro'; // Importar el modal/dialog
+import { supabase } from '../../lib/supabaseClient';
+
+// Cargar productos específicos para "Mascotas"
+let products = [];
+let fetchError = null;
+
+try {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*') // Asegúrate de seleccionar id, name, category, image_url_ref, image_url_full
+    .eq('category', 'Mascotas')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  products = data || [];
+} catch (err) {
+  console.error("Error al cargar productos de Supabase:", err);
+  fetchError = err;
+}
+
+// Categorías para la navegación
+const allCategories = [
+  { name: 'Niños', href: '/catalogo/ninos', id: 'Niños' },
+  { name: 'Niñas', href: '/catalogo/ninas', id: 'Niñas' },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', id: 'Mascotas' },
+];
+const currentCategory = 'Mascotas';
+---
+
+<Layout title="Catálogo - Carnets de Control para Mascotas">
+  <main class="catalog-page">
+    <div class="container">
+      <div class="catalog-header">
+        <h1>Carnets de Control para Mascotas</h1>
+        <p class="subtitle">Lleva un registro de vacunas y visitas de tu mejor amigo 🐾</p>
+      </div>
+
+      {/* Navegación de categorías */}
+      <nav class="category-nav">
+        <ul>
+          {allCategories.map(cat => (
+            <li>
+              <a href={cat.href} class:list={{ active: cat.id === currentCategory }}>
+                {cat.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Listado de productos */}
+      {fetchError ? (
+        <p class="error">
+          <strong>Error al cargar productos:</strong> {fetchError.message || 'Error desconocido.'}
+          <br /><small>(Ver consola y RLS en Supabase)</small>
+        </p>
+      ) : (
+        <div class="product-grid">
+          {products.length > 0 ? (
+            products.map(product => (
+              <> {/* Usamos Fragment para agrupar sin añadir div extra */}
+                {/* Renderizar la tarjeta del producto */}
+                <ProductCard product={product} />
+                {/* Renderizar el modal/dialog asociado (estará oculto) */}
+                <ProductFullCard product={product} />
+              </>
+            ))
+          ) : (
+            <p class="no-products-message">
+              Aún no hay productos en esta categoría.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>
+
+{/* NO hay script aquí */}
+
+<style>
+/* Estilos SOLO para la página de catálogo, NO para .product-card o .modal */
+.catalog-page { padding: 4rem 0; background: #fef7fb; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.catalog-header { text-align: center; margin-bottom: 2.5rem; }
+h1 { font-size: 2.2rem; color: #333; }
+.subtitle { color: #666; margin-top: 0.5rem; }
+.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; }
+.category-nav ul { display: flex; gap: 0.5rem; padding: 0; list-style: none; }
+.category-nav a { padding: 0.6rem 1.4rem; border-radius: 50px; text-decoration: none; font-weight: 600; color: #444; border: 2px solid transparent; transition: all 0.25s ease; }
+.category-nav a:hover { border-color: #f0ce0c; }
+.category-nav a.active { background: #f0ce0c; color: #333; border-color: #f0ce0c; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+.no-products-message, .error { grid-column: 1 / -1; text-align: center; color: #777; font-size: 1.1rem; padding: 3rem 1rem; background: #fff; border: 1px dashed #ddd; border-radius: 12px; }
+.error { color: red; background: #ffeaea; border-color: red; }
+.error small { color: #555; display: block; margin-top: 0.5rem; }
+</style>

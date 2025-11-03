@@ -1,0 +1,104 @@
+---
+// src/pages/catalogo/ninas.astro (CORREGIDO)
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import ProductFullCard from '../../components/ProductFullCard.astro'; // Necesario para el modal
+import { supabase } from '../../lib/supabaseClient';
+
+// Cargar productos específicos para "Niñas"
+let products = [];
+let fetchError = null;
+
+try {
+  // Asegúrate de que 'Niñas' coincida exactamente con tu DB (mayúsculas/minúsculas)
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, category, image_url_ref, image_url_full') // Seleccionar columnas necesarias
+    .eq('category', 'Niñas')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  products = data || [];
+  console.log(`✅ Productos 'Niñas' cargados: ${products.length}`);
+} catch (err) {
+  console.error("❌ Error al cargar productos 'Niñas':", err);
+  fetchError = err;
+}
+
+// Categorías para la navegación
+const allCategories = [
+  // Asegúrate que los href coincidan con tu estructura de rutas
+  { name: 'Niños', href: '/catalogo/ninos', id: 'Niños' },
+  { name: 'Niñas', href: '/catalogo/ninas', id: 'Niñas' },
+  { name: 'Mascotas', href: '/catalogo/veterinarios', id: 'Mascotas' },
+];
+const currentCategory = 'Niñas'; // Marcar 'Niñas' como activa
+---
+
+<Layout title="Catálogo - Carnets de Control Sano para Niñas">
+  <main class="catalog-page">
+    <div class="container">
+      <div class="catalog-header">
+        <h1>Carnets de Control Sano para Niñas</h1>
+        <p class="subtitle">Diseños encantadores para registrar sus primeros años de vida.</p>
+      </div>
+
+      {/* Navegación de Categorías */}
+      <nav class="category-nav">
+        <ul>
+          {allCategories.map(cat => (
+            <li>
+              <a href={cat.href} class:list={{ active: cat.id === currentCategory }}>
+                {cat.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Listado de productos */}
+      {fetchError ? (
+        <p class="error">
+          <strong>Error al cargar productos:</strong> {fetchError.message || 'Error desconocido.'}
+          <br /><small>(Ver consola del servidor y RLS en Supabase)</small>
+        </p>
+      ) : (
+        <div class="product-grid">
+          {products.length > 0 ? (
+            products.map(product => (
+              <>
+                {/* Usar los componentes correctamente */}
+                <ProductCard product={product} />
+                <ProductFullCard product={product} />
+              </>
+            ))
+          ) : (
+            <p class="no-products-message">
+              Aún no hay productos en la categoría "{currentCategory}". ¡Vuelve pronto!
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>
+
+{/* NO hay script aquí */}
+
+<style>
+/* Estilos adaptados para la página de Niñas */
+.catalog-page { padding: 4rem 0; background: #fff0f6; } /* Fondo rosa más suave */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.catalog-header { text-align: center; margin-bottom: 2.5rem; }
+h1 { font-size: 2.2rem; color: #d63384; } /* Título en rosa oscuro */
+.subtitle { color: #6c757d; margin-top: 0.5rem; }
+.category-nav { display: flex; justify-content: center; margin-bottom: 3rem; }
+.category-nav ul { display: flex; gap: 0.5rem; padding: 0; list-style: none; flex-wrap: wrap; justify-content: center; }
+.category-nav a { padding: 0.6rem 1.4rem; border-radius: 50px; text-decoration: none; font-weight: 600; color: #444; border: 2px solid transparent; transition: all 0.25s ease; }
+.category-nav a:hover { border-color: #ffafcc; } /* Borde rosa claro en hover */
+.category-nav a.active { background: #e83e8c; color: white; border-color: #e83e8c; font-weight: 700; } /* Activo en rosa */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+.no-products-message, .error { grid-column: 1 / -1; text-align: center; color: #777; font-size: 1.1rem; padding: 3rem 1rem; background: #fff; border: 1px dashed #ddd; border-radius: 12px; }
+.error { color: red; background: #ffeaea; border-color: red; }
+.error small { color: #555; display: block; margin-top: 0.5rem; }
+</style>

@@ -1,0 +1,122 @@
+---
+// src/pages/producto/[id].astro (Revisado y Correcto)
+import Layout from '../../layouts/Layout.astro';
+// No necesita Header/Footer aquí, Layout los incluye
+import ProductFullCard from '../../components/ProductFullCard.astro'; // Importa el componente de vista completa
+import { supabase } from '../../lib/supabaseClient';
+
+// Obtener el ID del producto desde la URL
+const { id } = Astro.params;
+let product = null;
+let fetchError = null;
+
+try {
+  // Cargar el producto específico desde Supabase
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, category, image_url_ref, image_url_full, description') // Selecciona todas las columnas necesarias
+    .eq('id', id)
+    .single(); // .single() obtiene un solo objeto o null, y error si hay más de uno
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 es "Row not found", no es un error fatal aquí
+      throw error;
+  }
+  product = data; // Será el objeto del producto o null si no se encontró
+} catch(err) {
+    console.error(`Error al cargar producto con ID ${id}:`, err);
+    fetchError = err;
+}
+
+// Determinar el título de la página
+const pageTitle = fetchError ? 'Error' : product ? product.name : 'Producto no encontrado';
+---
+
+<Layout title={`${pageTitle} | Dos Patitas`}>
+  {/* Header y Footer son añadidos por Layout.astro */}
+  <main class="product-page container"> {/* Añadido container para centrar */}
+    {fetchError ? (
+      <p class="error">
+          <strong>Error al cargar el producto:</strong> {fetchError.message || 'Error desconocido.'}
+          <br /><small>(Ver consola del servidor)</small>
+      </p>
+    ) : product ? (
+      // Renderizar el componente ProductFullCard con los datos del producto
+      // NOTA: ProductFullCard ahora es un <dialog>, se mostrará directamente aquí.
+      // Si quisieras que se muestre como antes (tarjeta + modal), necesitarías ProductCard aquí también.
+      // Asumiendo que esta página ES la vista detallada:
+      <div class="product-detail-view"> {/* Contenedor opcional */}
+        <img src={product.image_url_full || product.image_url_ref || '/images/placeholder.png'} alt={product.name} class="product-image-full"/>
+        <h2>{product.name}</h2>
+        <p class="category-label">{product.category}</p>
+        <p class="description-text">{product.description || 'Descripción no disponible.'}</p>
+        {/* Aquí podrías añadir un botón "Añadir al carrito" específico para esta vista */}
+        {/* <button class="add-to-cart-button" data-product-id={product.id}>Añadir al carrito</button> */}
+      </div>
+    ) : (
+      <p class="no-product">Lo sentimos, no pudimos encontrar este producto.</p>
+    )}
+  </main>
+</Layout>
+
+{/* No necesita script propio si el botón "Añadir al carrito" no está aquí o es manejado globalmente */}
+
+<style>
+.product-page {
+  background: #fef7fb;
+  min-height: calc(100vh - 100px); /* Ajusta según altura de header/footer */
+  padding: 4rem 0;
+}
+.container { /* Asegura centrado y padding */
+    max-width: 800px; /* Ancho máximo para vista de detalle */
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+.error, .no-product {
+  text-align: center;
+  padding: 4rem 1rem;
+  font-size: 1.3rem;
+  color: #666;
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px dashed #ddd;
+}
+.error { color: red; background-color: #ffeaea; border-color: red; }
+.error small { display: block; margin-top: 0.5rem; color: #555;}
+
+/* Estilos para la vista de detalle del producto */
+.product-detail-view {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.product-image-full {
+    width: 100%;
+    max-width: 450px; /* Limita tamaño de imagen */
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    margin: 0 auto 1.5rem auto; /* Centrar imagen */
+    display: block;
+}
+.product-detail-view h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+.category-label {
+    color: #888;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+.description-text {
+    color: #555;
+    line-height: 1.7;
+    text-align: left; /* Opcional: alinear descripción a la izquierda */
+    margin-bottom: 2rem;
+}
+/* Estilo opcional para botón "Añadir al carrito" */
+/* .add-to-cart-button { ... } */
+</style>
